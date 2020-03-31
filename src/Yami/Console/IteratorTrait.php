@@ -2,11 +2,16 @@
 
 namespace Yami\Console;
 
+use Yami\Config\Bootstrap;
+
 trait IteratorTrait
 {
 
-    protected function getMigrations(string $path): array
+    protected function getMigrations(): array
     {
+        $config = Bootstrap::getConfig();
+        $path = $config->path . '/';
+
         $migrations = [];
 
         foreach (glob($path . "*.php") as $migration) {

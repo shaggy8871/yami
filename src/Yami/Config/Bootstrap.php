@@ -18,14 +18,20 @@ class Bootstrap
             'asMultilineLiteral'    => false,
             'base64BinaryData'      => false,
             'nullAsTilde'           => false,
-        ]
+        ],
+        'yamlFile' => 'default.yaml',
+        'path' => './migrations',
     ];
 
     public static function getConfig()
     {
-        return json_decode(json_encode(array_merge(static::$defaultConfig, [
-            'yamlFile' => 'test.yaml'
-        ])));
+        if (file_exists('config.php')) {
+            $config = include('config.php');
+        } else {
+            echo "Cannot find config.php in root. Run `vendor/bin/yami config` to create it.\nReverting to defaults...\n";
+        }
+
+        return json_decode(json_encode(array_merge(static::$defaultConfig, $config)));
     }
 
 }

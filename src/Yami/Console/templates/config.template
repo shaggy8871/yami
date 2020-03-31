@@ -1,0 +1,6 @@
+<?php
+
+return [
+    'yamlFile' => 'default.yaml',
+    'path' => './migrations',
+];

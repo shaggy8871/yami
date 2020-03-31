@@ -7,6 +7,7 @@ echo "-------------------------\n";
 echo "Yami 0.0.1 by J. Ginsberg\n\n";
 
 $console = new Console\Runner();
+$console->setAppName('Yami 0.0.1');
 
 // Add one or more commands here
 $console->registerAll([
@@ -17,7 +18,15 @@ $console->registerAll([
     'rollback' => [
         'class' => 'Yami\Console\Rollback',
         'description' => 'Rollback recent changes to YAML file'
-    ]
+    ],
+    'create' => [
+        'class' => 'Yami\Console\Create',
+        'description' => 'Create a migration file'
+    ],
+    'config' => [
+        'class' => 'Yami\Console\Config',
+        'description' => 'Create a configuration file'
+    ],
 ]);
 
 // Start your engines...

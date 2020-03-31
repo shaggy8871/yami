@@ -3,7 +3,6 @@
 namespace Yami\Console;
 
 use Console\{CommandInterface, Args, Decorate};
-use Yami\Migration\AbstractMigration;
 
 abstract class ConsoleAbstract implements CommandInterface
 {
@@ -18,14 +17,11 @@ abstract class ConsoleAbstract implements CommandInterface
 
     public function execute(Args $args): void
     {
-
         $args->setAliases([
             'v' => 'verify'
         ]);
 
-        $path = 'migrations/';
-
-        $migrations = $this->getMigrations($path);
+        $migrations = $this->getMigrations();
 
         echo Decorate::color(sprintf("%d migrations", count($migrations)), 'blue bold') . 
              Decorate::color(sprintf(" found.\n\n", count($migrations)), 'white');
@@ -51,7 +47,6 @@ abstract class ConsoleAbstract implements CommandInterface
         }
 
         echo "\n";
-
     }
 
 }
