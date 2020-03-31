@@ -1,0 +1,34 @@
+{
+    "name": "shaggy8871/yami",
+    "description": "Yami is a YAML migration tool",
+    "type": "application",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "J. Ginsberg",
+            "email": "john.ginsberg@tristadeca.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.4.0",
+        "symfony/yaml": "^5.0",
+        "shaggy8871/console": ">=1.0.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yami\\": "./src/Yami/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "./tests/Tests/"
+        }
+    },
+    "bin": [
+        "yami"
+    ]
+}

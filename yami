@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php declare(strict_types=1);
+
+include_once("vendor/autoload.php");
+
+echo "-------------------------\n";
+echo "Yami 0.0.1 by J. Ginsberg\n\n";
+
+$console = new Console\Runner();
+
+// Add one or more commands here
+$console->registerAll([
+    'migrate' => [
+        'class' => 'Yami\Console\Migrate',
+        'description' => 'Migrate new changes to YAML file'
+    ],
+    'rollback' => [
+        'class' => 'Yami\Console\Rollback',
+        'description' => 'Rollback recent changes to YAML file'
+    ]
+]);
+
+// Start your engines...
+try {
+    $console->run();
+} catch(Console\Exception\CommandNotFoundException $e) {
+    echo $e->getMessage() . "\n--------\n\n" . $console->getHelp();
+    die();
+}
