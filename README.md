@@ -43,6 +43,6 @@ This will add a node to the root of the YAML file as follows:
 yami: value
 ```
 
-Save the file using the filename <date>_basic_example.php where the file name must match the class name.
+Save the file using the filename &lt;date&gt;_basic_example.php where the file name must match the class name.
 
 Then run `vendor/bin/yami migrate --verify` to verify the output, and `vendor/bin/yami migrate` to commit and save the migration.

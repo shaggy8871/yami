@@ -20,7 +20,7 @@ abstract class ConsoleAbstract implements CommandInterface
     {
 
         $args->setAliases([
-            'c' => 'check'
+            'v' => 'verify'
         ]);
 
         $path = 'migrations/';
