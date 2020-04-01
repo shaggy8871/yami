@@ -34,5 +34,7 @@ try {
     $console->run();
 } catch(Console\Exception\CommandNotFoundException $e) {
     echo $e->getMessage() . "\n--------\n\n" . $console->getHelp();
-    die();
+    exit(1);
 }
+
+exit(0);

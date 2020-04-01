@@ -3,6 +3,7 @@
 namespace Yami\Console;
 
 use Console\{CommandInterface, Args, Decorate};
+use Yami\Config\Bootstrap;
 
 abstract class ConsoleAbstract implements CommandInterface
 {
@@ -18,14 +19,20 @@ abstract class ConsoleAbstract implements CommandInterface
     public function execute(Args $args): void
     {
         $args->setAliases([
-            'v' => 'verify'
+            'v' => 'verify',
+            'e' => 'env',
         ]);
 
-        $migrations = $this->getMigrations();
+        $migrations = $this->getMigrations($args);
+        $isVerification = array_key_exists('verify', $args->getAll());
 
         echo Decorate::color(sprintf("%d migrations", count($migrations)), 'blue bold') . 
              Decorate::color(sprintf(" found.\n\n", count($migrations)), 'white');
 
+        if ($isVerification) {
+            $mockYaml = Bootstrap::createMockYaml($args);
+        }
+    
         foreach($migrations as $migration) {
             include_once($migration->filePath);
 
@@ -36,14 +43,27 @@ abstract class ConsoleAbstract implements CommandInterface
                 try {
                     new $className(static::ACTION, $migration, $args);
                     echo Decorate::color("OK!\n", 'green');
+                    if ($isVerification) {
+                        echo file_get_contents($mockYaml) . "\n";
+                    }
                 } catch (\Exception $e) {
                     echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');
-                    die();
+                    if ($isVerification) {
+                        Bootstrap::deleteMockYaml($args);
+                    }            
+                    exit(1);
                 }
             } else {
                 echo Decorate::color(sprintf("\n>> Unable to find class!\n\n", $className), 'red');
-                die();
+                if ($isVerification) {
+                    Bootstrap::deleteMockYaml($args);
+                }
+                exit(1);
             }
+        }
+
+        if ($isVerification) {
+            Bootstrap::deleteMockYaml($args);
         }
 
         echo "\n";

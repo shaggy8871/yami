@@ -1,6 +1,13 @@
 <?php
 
 return [
-    'yamlFile' => 'default.yaml',
-    'path' => './migrations',
+    'environments' => [
+        'default' => [
+            'yamlFile' => 'default.yaml',
+            'path' => './migrations',
+        ],
+    ],
+    'save' => [
+        'indentation' => 2,
+    ]
 ];

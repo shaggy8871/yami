@@ -25,6 +25,11 @@ abstract class AbstractMigration
     /**
      * @var array
      */
+    protected $environment;
+
+    /**
+     * @var array
+     */
     protected $yaml;
 
     /**
@@ -36,6 +41,7 @@ abstract class AbstractMigration
     {
         $this->args = $args;
         $this->config = Bootstrap::getConfig();
+        $this->environment = Bootstrap::getEnvironment($args);
 
         $loadFlags = 
             ($this->config->load->asObject ? Yaml::PARSE_OBJECT : 0) + 
@@ -44,13 +50,13 @@ abstract class AbstractMigration
 
         try {
             $this->yaml = Yaml::parseFile(
-                $this->config->yamlFile, 
+                $this->environment->yamlFile, 
                 $loadFlags
             );
             // Convert to array
             $this->yaml = json_decode(json_encode($this->yaml), true);
         } catch (ParseException $e) {
-            throw new \Exception(sprintf('Unable to parse YAML file "%s".', $this->config->yamlFile));
+            throw new \Exception(sprintf('Unable to parse YAML file "%s".', $this->environment->yamlFile));
         }
 
         switch ($action) {
@@ -131,11 +137,7 @@ abstract class AbstractMigration
             $saveFlags
         );
 
-        if (array_key_exists('verify', $this->args->getAll())) {
-            echo "\n" . $yaml;
-        } else {
-            file_put_contents($this->config->yamlFile, $yaml);
-        }
+        file_put_contents($this->environment->yamlFile, $yaml);
     }
 
     /**

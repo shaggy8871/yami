@@ -3,14 +3,15 @@
 namespace Yami\Console;
 
 use Yami\Config\Bootstrap;
+use Console\Args;
 
 trait IteratorTrait
 {
 
-    protected function getMigrations(): array
+    protected function getMigrations(Args $args): array
     {
-        $config = Bootstrap::getConfig();
-        $path = $config->path . '/';
+        $environment = Bootstrap::getEnvironment($args);
+        $path = $environment->path . '/';
 
         $migrations = [];
 
