@@ -101,6 +101,8 @@ class Bootstrap
             throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
         }
 
+        $config->environments->$environment->name = $environment;
+
         return $config->environments->$environment;
     }
 

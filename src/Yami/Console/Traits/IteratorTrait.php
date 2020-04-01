@@ -1,22 +1,20 @@
 <?php declare(strict_types=1);
 
-namespace Yami\Console;
+namespace Yami\Console\Traits;
 
 use Yami\Config\Bootstrap;
-use Console\Args;
 
 trait IteratorTrait
 {
 
-    protected function getMigrations(Args $args): array
+    protected function getMigrations(): array
     {
-        $environment = Bootstrap::getEnvironment($args);
+        $environment = Bootstrap::getEnvironment($this->args);
         $path = $environment->path . '/';
 
         $migrations = [];
 
         foreach (glob($path . "*.php") as $migration) {
-
             $uniqueId = str_replace([$path, '.php'], '', $migration);
 
             // Extract version
@@ -28,13 +26,19 @@ trait IteratorTrait
                 die();
             }
 
+            $className = preg_replace_callback('/(_[a-z])/', function($m) {
+                return strtoupper(str_replace('_', '', $m[0]));
+            }, str_replace($version, '', $uniqueId));
+
+            if ($this->migrationHasRun($className)) {
+                continue;
+            }
+
             $migrations[] = (object) [
                 'filePath'  => $migration,
                 'uniqueId'  => $uniqueId,
                 'version'   => $version,
-                'className' => preg_replace_callback('/(_[a-z])/', function($m) {
-                                    return strtoupper(str_replace('_', '', $m[0]));
-                                }, str_replace($version, '', $uniqueId))
+                'className' => $className,
             ];
         }
 
