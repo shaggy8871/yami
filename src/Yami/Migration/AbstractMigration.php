@@ -80,7 +80,7 @@ abstract class AbstractMigration
     /**
      * Finds and returns a tree node
      * 
-     * @param string $selector
+     * @param string selector
      * 
      * @return Yami\Migration\Node
      */
@@ -99,7 +99,7 @@ abstract class AbstractMigration
     /**
      * Checks whether the specified key exists
      * 
-     * @param string $selector
+     * @param string selector
      * 
      * @return bool
      */
@@ -159,7 +159,60 @@ abstract class AbstractMigration
     }
 
     /**
+     * Get an environment variable and validate it
+     * 
+     * @param string the name of the variable
+     * @param array a list of validations to apply
+     * 
+     * @return string
+     */
+    public function env(string $name, array $validations = []): string
+    {
+        $value = getenv($name);
+
+        if (isset($validations['default'])) {
+            if ($value === false) {
+                $value = $validations['default'];
+            }
+        }
+        if (isset($validations['type'])) {
+            switch($validations['type']) {
+                case 'integer':
+                    if ((string) intval($value) != $value) {
+                        throw new \Exception(sprintf('Environment variable "%s" is not an integer.', $name));
+                    }
+                    break;
+                case 'string':
+                    if (!is_string($value)) {
+                        throw new \Exception(sprintf('Environment variable "%s" is not an string.', $name));
+                    }
+                    break;
+                case 'float':
+                    if ((string) floatval($value) != $value) {
+                        throw new \Exception(sprintf('Environment variable "%s" is not an float.', $name));
+                    }
+                    break;
+                case 'boolean':
+                    $value = strtolower((string) $value);
+                    if ($value != 'true' && $value != 'false' && $value != '1' && $value != '0' && $value != 'on' && $value != 'off') {
+                        throw new \Exception(sprintf('Environment variable "%s" is not an boolean.', $name));
+                    }
+                    break;
+            }
+        }
+        if (in_array('required', $validations)) {
+            if ($value === false) {
+                throw new \Exception(sprintf('Missing required environment variable "%s".', $name));
+            }        
+        }
+
+        return $value;
+    }
+
+    /**
      * Find a node using a jq-style selector
+     * 
+     * @param string selector
      */
     private function findNode(string $selector): Node
     {
@@ -210,6 +263,10 @@ abstract class AbstractMigration
 
     /**
      * Recursively remove empty nodes
+     * 
+     * @param array
+     * 
+     * @return array
      */
     private function removeEmpty(array $i): array
     {

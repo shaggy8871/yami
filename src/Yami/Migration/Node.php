@@ -132,7 +132,7 @@ class Node
         }
 
         switch($type) {
-            case 'int':     return is_int($this->value[$key]);
+            case 'integer': return is_int($this->value[$key]);
             case 'string':  return is_string($this->value[$key]);
             case 'float':   return is_float($this->value[$key]);
             case 'boolean': return is_bool($this->value[$key]);

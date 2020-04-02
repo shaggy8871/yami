@@ -136,11 +136,11 @@ class NodeTest extends TestCase
             'bad' => 'ban'
         ], '.');
 
-        $this->assertTrue($node->containsType('foo', 'int'));
+        $this->assertTrue($node->containsType('foo', 'integer'));
         $this->assertTrue($node->containsType('bar', 'string'));
         $this->assertTrue($node->containsType('baz', 'float'));
         $this->assertTrue($node->containsType('boo', 'boolean'));
-        $this->assertFalse($node->containsType('bad', 'int'));
+        $this->assertFalse($node->containsType('bad', 'integer'));
     }
 
     public function testGetSelector(): void
