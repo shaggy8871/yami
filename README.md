@@ -44,6 +44,6 @@ This will add a node to the root of your YAML file as follows:
 foo: bar
 ```
 
-To verify the output without saving, run `vendor/bin/yami migrate --verify`.
+To dry run the migrations without saving, run `vendor/bin/yami migrate --dry-run`.
 
 To commit and save the migration, run `vendor/bin/yami migrate`.

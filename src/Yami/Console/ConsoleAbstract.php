@@ -38,19 +38,19 @@ abstract class ConsoleAbstract implements CommandInterface
         $this->environment = Bootstrap::getEnvironment($this->args);
 
         $args->setAliases([
-            'v' => 'verify',
+            'd' => 'dry-run',
             'e' => 'env',
         ]);
 
         $this->loadHistory();
 
         $migrations = $this->getMigrations();
-        $isVerification = array_key_exists('verify', $args->getAll());
+        $isDryRun = array_key_exists('dry-run', $args->getAll());
 
         echo Decorate::color(sprintf("%d migrations", count($migrations)), 'blue bold') . 
              Decorate::color(sprintf(" found.\n\n", count($migrations)), 'white');
 
-        if ($isVerification) {
+        if ($isDryRun) {
             $mockYaml = Bootstrap::createMockYaml($args);
         }
 
@@ -68,21 +68,21 @@ abstract class ConsoleAbstract implements CommandInterface
 
                     echo Decorate::color("OK!\n", 'green');
 
-                    if ($isVerification) {
+                    if ($isDryRun) {
                         echo file_get_contents($mockYaml) . "\n";
                     } else {
                         $this->addHistory($migration->className);
                     }
                 } catch (\Exception $e) {
                     echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');
-                    if ($isVerification) {
+                    if ($isDryRun) {
                         Bootstrap::deleteMockYaml($args);
                     }            
                     exit(1);
                 }
             } else {
                 echo Decorate::color(sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red');
-                if ($isVerification) {
+                if ($isDryRun) {
                     Bootstrap::deleteMockYaml($args);
                 }
                 exit(1);
@@ -90,7 +90,7 @@ abstract class ConsoleAbstract implements CommandInterface
 
         }
 
-        if ($isVerification) {
+        if ($isDryRun) {
             Bootstrap::deleteMockYaml($args);
         }
 

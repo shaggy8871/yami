@@ -42,26 +42,32 @@ class Bootstrap
 
     /**
      * Returns a merged set of configuration settings
+     * 
+     * @return stdClass
      */
-    public static function getConfig()
+    public static function getConfig(): \stdClass
     {
         if (static::$config != null) {
             return static::$config;
         }
 
-        if (file_exists('config.php')) {
-            $customConfig = include('config.php');
+        if (file_exists('./config.php')) {
+            $customConfig = include('./config.php');
         } else {
             echo "Cannot find config.php in root. Run `vendor/bin/yami config` to create it.\nReverting to defaults...\n";
         }
 
-        static::$config = json_decode(json_encode(static::mergeRecursively(static::$defaultConfig, $customConfig)));
+        static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
 
         return static::$config;
     }
 
     /**
      * For verification migrations, we create a copy of the YAML file and operate on that
+     * 
+     * @param Args the console arguments
+     * 
+     * @return array
      */
     public static function createMockYaml(Args $args): string
     {
@@ -80,6 +86,10 @@ class Bootstrap
 
     /**
      * For verification migrations, delete the mock file
+     * 
+     * @param Args the console arguments
+     * 
+     * @return array
      */
     public static function deleteMockYaml(Args $args): void
     {
@@ -91,8 +101,12 @@ class Bootstrap
 
     /**
      * Determines the environment from console arguments
+     * 
+     * @param Args the console arguments
+     * 
+     * @return stdClass
      */
-    public static function getEnvironment(Args $args)
+    public static function getEnvironment(Args $args): \stdClass
     {
         $config = static::getConfig();
         $environment = $args->env ?? static::DEFAULT_ENV;
@@ -107,21 +121,15 @@ class Bootstrap
     }
 
     /**
-     * A better version of array_merge_recursive that doesn't duplicate values
+     * For test purposes, seed the config before querying
+     * 
+     * @param array the replacement config
+     * 
+     * @return void
      */
-    protected static function mergeRecursively(array &$arr1, array &$arr2): array
+    public static function seedConfig(array $customConfig): void
     {
-        $merged = $arr1;
-
-        foreach ($arr2 as $key => &$value) {
-            if (is_array($value) && isset($merged[$key]) && is_array($merged[$key])) {
-                $merged[$key] = static::mergeRecursively($merged[$key], $value);
-            } else {
-                $merged[$key] = $value;
-            }
-        }
-
-        return $merged;
+        static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
     }
 
 }

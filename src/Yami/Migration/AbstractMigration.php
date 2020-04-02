@@ -199,7 +199,7 @@ abstract class AbstractMigration
                     throw new \Exception(sprintf('Selector %s not found in YAML.\n', $this->activeNode->getSelector()));
                 }
             }
-            $aPtr = $this->activeNode->getValue();
+            $aPtr = $this->activeNode->get();
         }
 
         // Remove empty

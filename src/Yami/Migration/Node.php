@@ -16,12 +16,23 @@ class Node
     protected $value;
 
     /**
-     * @param mixed $value
+     * @param mixed the node contents
+     * @param string the original selector
      */
     public function __construct($value, string $selector)
     {
         $this->value = $value;
         $this->selector = $selector;
+    }
+
+    /**
+     * Return the current node value
+     * 
+     * @return mixed
+     */
+    public function get()
+    {
+        return $this->value;
     }
 
     /**
@@ -37,7 +48,7 @@ class Node
     }
 
     /**
-     * Add a value to a Node at the root
+     * Add a value to a node
      * 
      * @param mixed $value
      * 
@@ -46,20 +57,14 @@ class Node
     public function add($value): self
     {
         if (is_array($this->value)) {
-            if (is_array($value)) {
-                foreach($value as $k => $v) {
-                    $this->value[$k] = $v;
-                }
-            } else {
-                $this->value[] = $value;
-            }
+            $this->value = array_merge($this->value, (is_array($value) ? $value : []));
             return $this;    
         }
         throw new \Exception(sprintf('Unable to add value to scalar node of "%s".', $this->selector));
     }
 
     /**
-     * Remove a value from the Node if it exists
+     * Remove a value from the node if it exists
      * 
      * @param mixed $key
      * 
@@ -75,10 +80,12 @@ class Node
                     throw new \Exception(sprintf('Unable to remove key "%s" from node.', $k));
                 }
             }
+            $this->value = array_values($this->value);
             return $this;    
         } else
         if (isset($this->value[$key])) {
             unset($this->value[$key]);
+            $this->value = array_values($this->value);
             return $this;    
         }
         throw new \Exception(sprintf('Unable to remove key "%s" from node.', $key));
@@ -86,28 +93,52 @@ class Node
 
     /**
      * Recurses down the node to see if the key is found
+     * 
+     * @param mixed the key to search for
+     * 
+     * @return bool
      */
-    public function contains(string $key): bool
+    public function has($key): bool
     {
-
+        return isset($this->value[$key]);
     }
 
     /**
      * Recurses down the node to see if the key is found
      * and contains an array
+     * 
+     * @param mixed the key to search for
+     * 
+     * @return bool
      */
-    public function containsArray(string $key): bool
+    public function containsArray($key): bool
     {
-
+        return $this->has($key) && is_array($this->value[$key]);
     }
 
     /**
      * Recurses down the node to see if the key contains
      * a value of the specified type
+     * 
+     * @param mixed the key to search for
+     * @param string the type to validate for
+     * 
+     * @return bool
      */
-    public function containsType(string $key, string $type): bool
+    public function containsType($key, string $type): bool
     {
+        if (!$this->has($key)) {
+            return false;
+        }
 
+        switch($type) {
+            case 'int':     return is_int($this->value[$key]);
+            case 'string':  return is_string($this->value[$key]);
+            case 'float':   return is_float($this->value[$key]);
+            case 'boolean': return is_bool($this->value[$key]);
+        }
+
+        throw new \Exception(sprintf('Unknown type "%s" specified.', $type));
     }
 
     /**
@@ -121,17 +152,9 @@ class Node
     }
 
     /**
-     * Return the current $value
-     * 
-     * @return mixed
-     */
-    public function getValue()
-    {
-        return $this->value;
-    }
-
-    /**
      * Dump the node to stdout
+     * 
+     * @return void
      */
     public function dump(): void
     {
