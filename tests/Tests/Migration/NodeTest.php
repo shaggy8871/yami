@@ -60,6 +60,15 @@ class NodeTest extends TestCase
         $node->add(['bar' => 'baz']);
     }
 
+    public function testAddOnRoot(): void
+    {
+        $node = new Node(null, '.');
+
+        $node->add(['bar' => 'baz']);
+
+        $this->assertEquals($node->get(), ['bar' => 'baz']);
+    }
+
     public function testRemoveOnMap(): void
     {
         $node = new Node([
@@ -91,6 +100,15 @@ class NodeTest extends TestCase
         $node = new Node('foobar', '.');
 
         $node->remove('foobar');
+    }
+
+    public function testRemoveEmpty(): void
+    {
+        $node = new Node(['foo' => 'bar'], '.');
+
+        $node->remove('foo');
+
+        $this->assertEmpty($node->get());
     }
 
     public function testHasOnArray(): void

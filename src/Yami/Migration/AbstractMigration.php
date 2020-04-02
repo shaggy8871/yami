@@ -164,9 +164,9 @@ abstract class AbstractMigration
      * @param string the name of the variable
      * @param array a list of validations to apply
      * 
-     * @return string
+     * @return mixed
      */
-    public function env(string $name, array $validations = []): string
+    public function env(string $name, array $validations = [])
     {
         $value = getenv($name);
 
@@ -175,12 +175,18 @@ abstract class AbstractMigration
                 $value = $validations['default'];
             }
         }
+        if (in_array('required', $validations)) {
+            if ($value === false) {
+                throw new \Exception(sprintf('Missing required environment variable "%s".', $name));
+            }        
+        }
         if (isset($validations['type'])) {
             switch($validations['type']) {
                 case 'integer':
                     if ((string) intval($value) != $value) {
                         throw new \Exception(sprintf('Environment variable "%s" is not an integer.', $name));
                     }
+                    $value = intval($value);
                     break;
                 case 'string':
                     if (!is_string($value)) {
@@ -191,19 +197,16 @@ abstract class AbstractMigration
                     if ((string) floatval($value) != $value) {
                         throw new \Exception(sprintf('Environment variable "%s" is not an float.', $name));
                     }
+                    $value = floatval($value);
                     break;
                 case 'boolean':
                     $value = strtolower((string) $value);
                     if ($value != 'true' && $value != 'false' && $value != '1' && $value != '0' && $value != 'on' && $value != 'off') {
                         throw new \Exception(sprintf('Environment variable "%s" is not an boolean.', $name));
                     }
+                    $value = boolval($value);
                     break;
             }
-        }
-        if (in_array('required', $validations)) {
-            if ($value === false) {
-                throw new \Exception(sprintf('Missing required environment variable "%s".', $name));
-            }        
         }
 
         return $value;
@@ -249,7 +252,7 @@ abstract class AbstractMigration
                 if (((is_array($aPtr)) && (array_key_exists($k, $aPtr))) || (isset($aPtr[$k]))) {
                     $aPtr = &$aPtr[$k];
                 } else {
-                    throw new \Exception(sprintf('Selector %s not found in YAML.\n', $this->activeNode->getSelector()));
+                    unset($aPtr);
                 }
             }
             $aPtr = $this->activeNode->get();
@@ -276,7 +279,7 @@ abstract class AbstractMigration
             }
         }
         return array_filter($i, function($v) {
-            return !empty($v);
+            return $v !== [];
         });
     }
 

@@ -27,18 +27,55 @@ class AbstractMigrationTest extends TestCase
         Bootstrap::createMockYaml($args);
 
         $migration = (object) [
-            'filePath' => './tests/migrations/0000000000_test_class.php',
-            'uniqueId' => '0000000000_test_class'
+            'filePath' => './tests/migrations/0000000000_root_node_migration.php',
+            'uniqueId' => '0000000000_root_node_migration'
         ];
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \TestClass(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \RootNodeMigration(Migrate::ACTION, $migration, $args);
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals($rootNode, new Node(['foo' => 'baz'], '.'));
+        $this->assertEquals($rootNode, new Node([
+            'foo' => 'baz', 
+            'bar' => [
+                'baz' => 'boo'
+                ]
+            ], '.'));
+
+        Bootstrap::deleteMockYaml($args);
+    }
+
+    public function testRemoveEmpty(): void
+    {
+        $args = new Args([]);
+
+        // Seed the config
+        Bootstrap::seedConfig([
+            'environments' => [
+                'default' => [
+                    'yamlFile' => './tests/default.yaml',
+                    'path' => './tests/migrations',
+                ],
+            ]
+        ]);
+        Bootstrap::createMockYaml($args);
+
+        $migration = (object) [
+            'filePath' => './tests/migrations/0000000001_remove_empty.php',
+            'uniqueId' => '0000000001_remove_empty'
+        ];
+
+        include_once($migration->filePath);
+
+        $migrationInstance = new \RemoveEmpty(Migrate::ACTION, $migration, $args);
+
+        $rootNode = $migrationInstance->get('.');
+
+        $this->assertInstanceOf(Node::class, $rootNode);
+        $this->assertEquals($rootNode, new Node(['foo' => 'bar'], '.'));
 
         Bootstrap::deleteMockYaml($args);
     }

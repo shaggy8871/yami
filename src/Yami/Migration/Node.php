@@ -58,7 +58,12 @@ class Node
     {
         if (is_array($this->value)) {
             $this->value = array_merge($this->value, (is_array($value) ? $value : []));
-            return $this;    
+            return $this;
+        }
+        // Special case for empty nodes
+        if ($this->value === null) {
+            $this->value = $value;
+            return $this;
         }
         throw new \Exception(sprintf('Unable to add value to scalar node of "%s".', $this->selector));
     }
@@ -80,12 +85,16 @@ class Node
                     throw new \Exception(sprintf('Unable to remove key "%s" from node.', $k));
                 }
             }
-            $this->value = array_values($this->value);
+            if (count(array_filter(array_keys($this->value), 'is_string')) == 0) {
+                $this->value = array_values($this->value);
+            }
             return $this;    
         } else
         if (isset($this->value[$key])) {
             unset($this->value[$key]);
-            $this->value = array_values($this->value);
+            if (count(array_filter(array_keys($this->value), 'is_string')) == 0) {
+                $this->value = array_values($this->value);
+            }
             return $this;    
         }
         throw new \Exception(sprintf('Unable to remove key "%s" from node.', $key));
