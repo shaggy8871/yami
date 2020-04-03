@@ -34,21 +34,26 @@ abstract class ConsoleAbstract implements CommandInterface
 
     public function execute(Args $args): void
     {
-        $this->args = $args;
-        $this->environment = Bootstrap::getEnvironment($this->args);
-
         $args->setAliases([
+            'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
         ]);
+
+        $startTime = microtime(true);
+
+        $this->args = $args;
+        $this->environment = Bootstrap::getEnvironment($this->args);
 
         $this->loadHistory();
 
         $migrations = $this->getMigrations();
         $isDryRun = array_key_exists('dry-run', $args->getAll());
 
+        echo Decorate::color(sprintf("Using config file %s\n", $args->config ? './' . $args->config : './config.php'), 'white');
+
         echo Decorate::color(sprintf("%d migrations", count($migrations)), 'blue bold') . 
-             Decorate::color(sprintf(" found.\n\n", count($migrations)), 'white');
+             Decorate::color(sprintf(" found\n\n", count($migrations)), 'white');
 
         if ($isDryRun) {
             $mockYaml = Bootstrap::createMockYaml($args);
@@ -75,13 +80,15 @@ abstract class ConsoleAbstract implements CommandInterface
                     }
                 } catch (\Exception $e) {
                     echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');
+                    echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
                     if ($isDryRun) {
                         Bootstrap::deleteMockYaml($args);
-                    }            
+                    }
                     exit(1);
                 }
             } else {
                 echo Decorate::color(sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red');
+                echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
                 if ($isDryRun) {
                     Bootstrap::deleteMockYaml($args);
                 }
@@ -94,7 +101,7 @@ abstract class ConsoleAbstract implements CommandInterface
             Bootstrap::deleteMockYaml($args);
         }
 
-        echo "\n";
+        echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
     }
 
 }

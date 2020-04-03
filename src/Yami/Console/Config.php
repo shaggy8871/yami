@@ -9,9 +9,25 @@ class Config implements CommandInterface
 
     public function execute(Args $args): void
     {
-        file_put_contents('config.php', file_get_contents(__DIR__ . '/templates/config.template'));
+        $args->setAliases([
+            'e' => 'env',
+            'p' => 'project',
+        ]);
 
-        echo Decorate::color(sprintf("Created %s\n\n", 'config.php'), 'white');
+        $configFile = $args->project ? './' . preg_replace('/[^\w]/', '_', strtolower($args->project)) . '.php' : './config.php';
+
+        if (file_exists($configFile)) {
+            echo Decorate::color(sprintf("Config file %s already exists.\n\n", $configFile), 'red');
+            exit(1);
+        }
+
+        file_put_contents($configFile, file_get_contents(__DIR__ . '/templates/config.template'));
+
+        if ($args->project) {
+            echo Decorate::color(sprintf("Created config file %s for project \"%s\".\n\n", $configFile, $args->project), 'white');
+        } else {
+            echo Decorate::color(sprintf("Created config file %s.\n\n", $configFile), 'white');
+        }
     }
 
 }

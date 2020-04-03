@@ -55,10 +55,17 @@ class Bootstrap
             return static::$config;
         }
 
-        if (file_exists('./config.php')) {
-            $customConfig = include('./config.php');
+        if ($args->config) {
+            if (!file_exists($args->config)) {
+                throw new \Exception(sprintf('Unable to find config file %s.', $args->config));
+            }
+        }
+
+        $configFile = $args->config ? $args->config : './config.php';
+        if (file_exists($configFile)) {
+            $customConfig = include($configFile);
         } else {
-            echo "Cannot find config.php in root. Run `vendor/bin/yami config` to create it.\nReverting to defaults...\n";
+            throw new \Exception('Cannot find config file %s. Run `vendor/bin/yami config` to create one.');
         }
 
         static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
