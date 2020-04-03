@@ -7,7 +7,8 @@ echo "-------------------------\n";
 echo "Yami 0.0.1 by J. Ginsberg\n\n";
 
 $console = new Console\Runner();
-$console->setAppName('Yami 0.0.1');
+$console->setAppName('Yami');
+$console->setAppVersion('0.0.1');
 
 // Add one or more commands here
 $console->registerAll([
@@ -36,8 +37,8 @@ $console->registerAll([
 // Start your engines...
 try {
     $console->run();
-} catch(Console\Exception\CommandNotFoundException $e) {
-    echo $e->getMessage() . "\n--------\n\n" . $console->getHelp();
+} catch(Throwable $t) {
+    echo Console\Decorate::color($t->getMessage(), 'red bold') . "\n--------\n\n" . $console->getHelp();
     exit(1);
 }
 

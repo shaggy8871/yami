@@ -156,6 +156,9 @@ class Bootstrap
     {
         $environment = $args->env ?? static::DEFAULT_ENV;
 
+        if (!preg_match('/[a-z0-9_]+/', $environment)) {
+            throw new \Exception(sprintf('Environment "%s" is not a valid name. Please use only a-z0-9 and _ characters.', $environment));
+        }
         if (!isset($config->environments->$environment)) {
             throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
         }
