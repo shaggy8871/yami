@@ -27,6 +27,10 @@ $console->registerAll([
         'class' => 'Yami\Console\Config',
         'description' => 'Create a configuration file'
     ],
+    'mask' => [
+        'class' => 'Yami\Console\Mask',
+        'description' => 'Mask the contents of a YAML file'
+    ],
 ]);
 
 // Start your engines...

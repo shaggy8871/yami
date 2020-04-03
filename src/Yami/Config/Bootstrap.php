@@ -25,6 +25,8 @@ class Bootstrap
         ],
         'save' => [
             'indentation'           => 2,
+            'maskValues'            => false,
+            'removeEmptyNodes'      => true,
             'inlineFromLevel'       => 10,
             'asObject'              => false,
             'asYamlMap'             => false,
@@ -43,9 +45,11 @@ class Bootstrap
     /**
      * Returns a merged set of configuration settings
      * 
+     * @param Args the console arguments
+     * 
      * @return stdClass
      */
-    public static function getConfig(): \stdClass
+    public static function getConfig(Args $args): \stdClass
     {
         if (static::$config != null) {
             return static::$config;
@@ -59,6 +63,16 @@ class Bootstrap
 
         static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
 
+        $environment = static::validateEnvArgument(static::$config, $args);
+
+        // Merge in environment specific load and save settings
+        if (isset(static::$config->environments->$environment->load) && is_array(static::$config->environments->$environment->load)) {
+            static::$config->environments->$environment->load = json_decode(json_encode(array_merge((array) static::$config, static::$config->environments->$environment->load)));
+        }
+        if (isset(static::$config->environments->$environment->save) && is_array(static::$config->environments->$environment->save)) {
+            static::$config->environments->$environment->save = json_decode(json_encode(array_merge((array) static::$config, static::$config->environments->$environment->save)));
+        }
+
         return static::$config;
     }
 
@@ -66,18 +80,19 @@ class Bootstrap
      * For verification migrations, we create a copy of the YAML file and operate on that
      * 
      * @param Args the console arguments
+     * @param string optional YAML to mock with
      * 
      * @return array
      */
-    public static function createMockYaml(Args $args): string
+    public static function createMockYaml(Args $args, ?string $yaml = null): string
     {
-        $config = static::getConfig();
-        $environment = $args->env ?? static::DEFAULT_ENV;
+        $config = static::getConfig($args);
+        $environment = static::validateEnvArgument($config, $args);
 
         $originalYaml = static::$config->environments->$environment->yamlFile;
         $mockFilename = str_replace('.yaml', '_' . (new DateTime())->format('YmdHis') . '.mock.yaml', $originalYaml);
 
-        file_put_contents($mockFilename, file_get_contents($originalYaml));
+        file_put_contents($mockFilename, $yaml ?? file_get_contents($originalYaml));
 
         static::$config->environments->$environment->yamlFile = $mockFilename;
 
@@ -93,8 +108,8 @@ class Bootstrap
      */
     public static function deleteMockYaml(Args $args): void
     {
-        $config = static::getConfig();
-        $environment = $args->env ?? static::DEFAULT_ENV;
+        $config = static::getConfig($args);
+        $environment = static::validateEnvArgument($config, $args);
 
         unlink(static::$config->environments->$environment->yamlFile);
     }
@@ -108,12 +123,8 @@ class Bootstrap
      */
     public static function getEnvironment(Args $args): \stdClass
     {
-        $config = static::getConfig();
-        $environment = $args->env ?? static::DEFAULT_ENV;
-
-        if (!isset($config->environments->$environment)) {
-            throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
-        }
+        $config = static::getConfig($args);
+        $environment = static::validateEnvArgument($config, $args);
 
         $config->environments->$environment->name = $environment;
 
@@ -130,6 +141,26 @@ class Bootstrap
     public static function seedConfig(array $customConfig): void
     {
         static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
+    }
+
+    /**
+     * Validate the environment argument against the config
+     * 
+     * @param stdClass the config object
+     * @param Args the console argument
+     * 
+     * @throws Exception
+     * @returns string
+     */
+    private static function validateEnvArgument(\stdClass $config, Args $args): string
+    {
+        $environment = $args->env ?? static::DEFAULT_ENV;
+
+        if (!isset($config->environments->$environment)) {
+            throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
+        }
+
+        return $environment;
     }
 
 }

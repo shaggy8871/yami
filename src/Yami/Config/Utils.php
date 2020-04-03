@@ -28,4 +28,43 @@ class Utils
         return $merged;
     }
 
+    /**
+     * Recursively remove empty nodes
+     * 
+     * @param array the array
+     * 
+     * @return array
+     */
+    public static function removeEmpty(array $i): array
+    {
+        foreach ($i as &$value) {
+            if (is_array($value)) {
+                $value = static::removeEmpty($value);
+            }
+        }
+        return array_filter($i, function($v) {
+            return $v !== [];
+        });
+    }
+
+    /**
+     * Mask all values in the array
+     * 
+     * @param array the array
+     */
+    public static function maskValues(array $i): array
+    {
+        foreach ($i as &$value) {
+            if (is_array($value)) {
+                $value = static::maskValues($value);
+            }
+        }
+        return array_map(function($v) {
+            if (is_scalar($v)) {
+                return '(masked)';
+            }
+            return $v;
+        }, $i);
+    }
+
 }

@@ -3,7 +3,8 @@
 namespace Yami\Migration;
 
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
-use Yami\Config\Bootstrap;
+use Yami\Config\{Bootstrap, Utils};
+use Yami\Yaml\Adapter;
 use Console\Args;
 
 abstract class AbstractMigration
@@ -40,24 +41,10 @@ abstract class AbstractMigration
     public function __construct(string $action, \stdClass $migration, Args $args)
     {
         $this->args = $args;
-        $this->config = Bootstrap::getConfig();
+        $this->config = Bootstrap::getConfig($args);
         $this->environment = Bootstrap::getEnvironment($args);
 
-        $loadFlags = 
-            ($this->config->load->asObject ? Yaml::PARSE_OBJECT : 0) + 
-            ($this->config->load->asYamlMap ? Yaml::PARSE_OBJECT_FOR_MAP : 0) + 
-            Yaml::PARSE_EXCEPTION_ON_INVALID_TYPE;
-
-        try {
-            $this->yaml = Yaml::parseFile(
-                $this->environment->yamlFile, 
-                $loadFlags
-            );
-            // Convert to array
-            $this->yaml = json_decode(json_encode($this->yaml), true);
-        } catch (ParseException $e) {
-            throw new \Exception(sprintf('Unable to parse YAML file "%s".', $this->environment->yamlFile));
-        }
+        $this->yaml = Adapter::load($this->config, $this->environment);
 
         switch ($action) {
             case self::ACTION_MIGRATE:
@@ -121,23 +108,7 @@ abstract class AbstractMigration
     {
         $this->syncNode();
 
-        $saveFlags = 
-            ($this->config->save->asObject ? Yaml::DUMP_OBJECT : 0) + 
-            ($this->config->save->asYamlMap ? Yaml::DUMP_OBJECT_AS_MAP : 0) + 
-            ($this->config->save->asMultilineLiteral ? Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK : 0) + 
-            ($this->config->save->base64BinaryData ? Yaml::DUMP_BASE64_BINARY_DATA : 0) +
-            ($this->config->save->nullAsTilde ? Yaml::DUMP_NULL_AS_TILDE : 0) + 
-            Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE + 
-            Yaml::DUMP_EXCEPTION_ON_INVALID_TYPE;
-
-        $yaml = Yaml::dump(
-            $this->yaml, 
-            $this->config->save->inlineFromLevel ?? 10, 
-            $this->config->save->indentation ?? 2,
-            $saveFlags
-        );
-
-        file_put_contents($this->environment->yamlFile, $yaml);
+        Adapter::save($this->yaml, $this->config, $this->environment);
     }
 
     /**
@@ -259,28 +230,17 @@ abstract class AbstractMigration
         }
 
         // Remove empty
-        $this->yaml = $this->removeEmpty($this->yaml);
+        if ($this->config->save->removeEmptyNodes) {
+            $this->yaml = Utils::removeEmpty($this->yaml);
+        }
+
+        // Mask values
+        if ($this->config->save->maskValues) {
+            $this->yaml = Utils::maskValues($this->yaml);
+        }
+
         // Convert nodes to array
         $this->yaml = json_decode(json_encode($this->yaml), true);
-    }
-
-    /**
-     * Recursively remove empty nodes
-     * 
-     * @param array
-     * 
-     * @return array
-     */
-    private function removeEmpty(array $i): array
-    {
-        foreach ($i as &$value) {
-            if (is_array($value)) {
-                $value = $this->removeEmpty($value);
-            }
-        }
-        return array_filter($i, function($v) {
-            return $v !== [];
-        });
     }
 
 }

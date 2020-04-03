@@ -19,12 +19,11 @@ class AbstractMigrationTest extends TestCase
         Bootstrap::seedConfig([
             'environments' => [
                 'default' => [
-                    'yamlFile' => './tests/default.yaml',
                     'path' => './tests/migrations',
                 ],
             ]
         ]);
-        Bootstrap::createMockYaml($args);
+        Bootstrap::createMockYaml($args, "foo: bar");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000000_root_node_migration.php',
@@ -39,11 +38,8 @@ class AbstractMigrationTest extends TestCase
 
         $this->assertInstanceOf(Node::class, $rootNode);
         $this->assertEquals($rootNode, new Node([
-            'foo' => 'baz', 
-            'bar' => [
-                'baz' => 'boo'
-                ]
-            ], '.'));
+            'foo' => 'baz'
+        ], '.'));
 
         Bootstrap::deleteMockYaml($args);
     }
@@ -56,12 +52,11 @@ class AbstractMigrationTest extends TestCase
         Bootstrap::seedConfig([
             'environments' => [
                 'default' => [
-                    'yamlFile' => './tests/default.yaml',
                     'path' => './tests/migrations',
                 ],
             ]
         ]);
-        Bootstrap::createMockYaml($args);
+        Bootstrap::createMockYaml($args, "foo: bar\nbar:\n  baz: boo");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000001_remove_empty.php',

@@ -1,0 +1,46 @@
+<?php declare(strict_types=1);
+
+namespace Yami\Console;
+
+use Console\{CommandInterface, Args, Decorate};
+use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
+use Yami\Config\{Bootstrap, Utils};
+use Yami\Yaml\Adapter;
+use DateTime;
+
+class Mask implements CommandInterface
+{
+
+    public function execute(Args $args): void
+    {
+        $args->setAliases([
+            'd' => 'dry-run',
+            'e' => 'env',
+        ]);
+
+        $config = Bootstrap::getConfig($args);
+        $environment = Bootstrap::getEnvironment($args);
+
+        $isDryRun = array_key_exists('dry-run', $args->getAll());
+        $yamlFile = $environment->yamlFile;
+
+        Bootstrap::createMockYaml($args);
+
+        $yaml = Adapter::load($config, $environment);
+        $yaml = Utils::maskValues($yaml);
+        $yaml = Adapter::save($yaml, $config, $environment);
+
+        Bootstrap::deleteMockYaml($args);
+
+        if ($isDryRun) {
+            echo $yaml . "\n";
+        } else {
+            $backupFile = str_replace('.yaml', '_' . (new DateTime())->format('YmdHis') . '.yaml', $yamlFile);
+            file_put_contents($backupFile, file_get_contents($yamlFile));
+            file_put_contents($yamlFile, $yaml);
+            echo Decorate::color(sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white');
+        }
+
+    }
+
+}
