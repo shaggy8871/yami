@@ -69,7 +69,7 @@ abstract class ConsoleAbstract implements CommandInterface
                     echo Decorate::color("OK!\n", 'green');
 
                     if ($isDryRun) {
-                        echo file_get_contents($mockYaml) . "\n";
+                        echo trim(file_get_contents($mockYaml)) . "\n";
                     } else {
                         $this->addHistory($migration->className);
                     }

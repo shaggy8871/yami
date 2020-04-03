@@ -66,11 +66,11 @@ class Bootstrap
         $environment = static::validateEnvArgument(static::$config, $args);
 
         // Merge in environment specific load and save settings
-        if (isset(static::$config->environments->$environment->load) && is_array(static::$config->environments->$environment->load)) {
-            static::$config->environments->$environment->load = json_decode(json_encode(array_merge((array) static::$config, static::$config->environments->$environment->load)));
+        if (isset(static::$config->environments->$environment->load) && is_object(static::$config->environments->$environment->load)) {
+            static::$config->load = json_decode(json_encode(array_merge((array) static::$config->load, (array) static::$config->environments->$environment->load)));
         }
-        if (isset(static::$config->environments->$environment->save) && is_array(static::$config->environments->$environment->save)) {
-            static::$config->environments->$environment->save = json_decode(json_encode(array_merge((array) static::$config, static::$config->environments->$environment->save)));
+        if (isset(static::$config->environments->$environment->save) && is_object(static::$config->environments->$environment->save)) {
+            static::$config->save = json_decode(json_encode(array_merge((array) static::$config->save, (array) static::$config->environments->$environment->save)));
         }
 
         return static::$config;
@@ -90,9 +90,9 @@ class Bootstrap
         $environment = static::validateEnvArgument($config, $args);
 
         $originalYaml = static::$config->environments->$environment->yamlFile;
-        $mockFilename = str_replace('.yaml', '_' . (new DateTime())->format('YmdHis') . '.mock.yaml', $originalYaml);
+        $mockFilename = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.mock.$1', $originalYaml);
 
-        file_put_contents($mockFilename, $yaml ?? file_get_contents($originalYaml));
+        file_put_contents($mockFilename, $yaml ?? trim(file_get_contents($originalYaml)));
 
         static::$config->environments->$environment->yamlFile = $mockFilename;
 

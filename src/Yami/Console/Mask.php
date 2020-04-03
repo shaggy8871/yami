@@ -35,8 +35,8 @@ class Mask implements CommandInterface
         if ($isDryRun) {
             echo $yaml . "\n";
         } else {
-            $backupFile = str_replace('.yaml', '_' . (new DateTime())->format('YmdHis') . '.yaml', $yamlFile);
-            file_put_contents($backupFile, file_get_contents($yamlFile));
+            $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
+            file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
             file_put_contents($yamlFile, $yaml);
             echo Decorate::color(sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white');
         }
