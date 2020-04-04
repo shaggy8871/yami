@@ -2,14 +2,14 @@
 
 namespace Yami\Console;
 
-use Yami\Console\Traits\{IteratorTrait, HistoryTrait};
+use Yami\Console\Traits\HistoryTrait;
 use Console\{CommandInterface, Args, Decorate};
 use Yami\Config\Bootstrap;
 
 abstract class ConsoleAbstract implements CommandInterface
 {
 
-    use IteratorTrait, HistoryTrait;
+    use HistoryTrait;
 
     /**
      * To be defined in derived class
@@ -28,6 +28,11 @@ abstract class ConsoleAbstract implements CommandInterface
     protected $args;
 
     /**
+     * @var string
+     */
+    protected $configId;
+
+    /**
      * @var array
      */
     protected $environment;
@@ -38,28 +43,44 @@ abstract class ConsoleAbstract implements CommandInterface
             'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
+            's' => 'step',
+            't' => 'target',
         ]);
 
         $startTime = microtime(true);
 
         $this->args = $args;
         $this->environment = Bootstrap::getEnvironment($this->args);
+        $this->configId = Bootstrap::getConfigId();
 
-        $this->loadHistory();
+        $this->loadHistory(true);
 
-        $migrations = $this->getMigrations();
+        $lastBatchNo = $this->getLastBatchNo();
         $isDryRun = array_key_exists('dry-run', $args->getAll());
+        $migrations = $this->getMigrations($lastBatchNo);
 
-        echo Decorate::color(sprintf("Using config file %s\n", $args->config ? './' . $args->config : './config.php'), 'white');
+        echo Decorate::color("Using configuration: ", 'white') . Decorate::color(sprintf("%s\n", $args->config ? './' . $args->config : './config.php'), 'light_blue');
+        if ($this->environment->name != $args->env) {
+            echo Decorate::color(sprintf("Warning, no environment specified; defaulting to '%s'\n", $this->environment->name), 'light_red');
+        } else {
+            echo Decorate::color("Using environment: ", 'white') . Decorate::color(sprintf("%s\n", $this->environment->name), 'light_blue');
+        }
 
-        echo Decorate::color(sprintf("%d migrations", count($migrations)), 'blue bold') . 
+        if (count($migrations)) {
+            echo Decorate::color('Migrations file path: ', 'white') . Decorate::color(sprintf("%s\n", $this->environment->path), 'light_blue');
+            echo $this->getMessages($lastBatchNo);
+        }
+
+        echo Decorate::color(sprintf("\n%d migration(s)", count($migrations)), 'green') . 
              Decorate::color(sprintf(" found\n\n", count($migrations)), 'white');
 
         if ($isDryRun) {
             $mockYaml = Bootstrap::createMockYaml($args);
         }
 
+        $iteration = 0;
         foreach($migrations as $migration) {
+            $iteration++;
 
             include_once($migration->filePath);
 
@@ -69,14 +90,14 @@ abstract class ConsoleAbstract implements CommandInterface
                 $className = $migration->className;
                 try {
                     // Instantiate migration
-                    new $className(static::ACTION, $migration, $args);
+                    $migrationClass = new $className(static::ACTION, $migration, $args);
 
                     echo Decorate::color("OK!\n", 'green');
 
                     if ($isDryRun) {
-                        echo trim(file_get_contents($mockYaml)) . "\n";
+                        echo trim(file_get_contents($mockYaml)) . "\n\n";
                     } else {
-                        $this->addHistory($migration->className);
+                        $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }
                 } catch (\Exception $e) {
                     echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');

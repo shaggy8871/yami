@@ -11,7 +11,7 @@ class Config implements CommandInterface
     {
         $args->setAliases([
             'e' => 'env',
-            'p' => 'project',
+            'p' => 'path',
         ]);
 
         $configFile = $args->project ? './' . preg_replace('/[^\w]/', '_', strtolower($args->project)) . '.php' : './config.php';
@@ -23,8 +23,8 @@ class Config implements CommandInterface
 
         file_put_contents($configFile, file_get_contents(__DIR__ . '/templates/config.template'));
 
-        if ($args->project) {
-            echo Decorate::color(sprintf("Created config file %s for project \"%s\".\n\n", $configFile, $args->project), 'white');
+        if ($args->path) {
+            echo Decorate::color(sprintf("Created config file %s at path \"%s\".\n\n", $configFile, $args->path), 'white');
         } else {
             echo Decorate::color(sprintf("Created config file %s.\n\n", $configFile), 'white');
         }

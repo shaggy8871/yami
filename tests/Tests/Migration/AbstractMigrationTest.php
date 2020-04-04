@@ -20,6 +20,7 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
+                    'yamlFile' => 'default.yaml',
                 ],
             ]
         ]);
@@ -53,6 +54,7 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
+                    'yamlFile' => 'default.yaml',
                 ],
             ]
         ]);

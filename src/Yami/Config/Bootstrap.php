@@ -16,6 +16,11 @@ class Bootstrap
     protected static $config;
 
     /**
+     * @var string
+     */
+    protected static $configId;
+
+    /**
      * @var array
      */
     protected static $defaultConfig = [
@@ -35,10 +40,6 @@ class Bootstrap
             'nullAsTilde'           => false,
         ],
         'environments' => [
-            'default' => [
-                'yamlFile' => 'default.yaml',
-                'path' => './migrations',
-            ],
         ],
     ];
 
@@ -67,6 +68,9 @@ class Bootstrap
         } else {
             throw new \Exception('Cannot find config file %s. Run `vendor/bin/yami config` to create one.');
         }
+
+        // Save config file id
+        static::setConfigId($configFile);
 
         static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
 
@@ -139,6 +143,28 @@ class Bootstrap
     }
 
     /**
+     * Sets the config file identifier which is used for history tracking
+     * 
+     * @param string the config file name and path
+     * 
+     * @return void
+     */
+    public static function setConfigId(string $configFile): void
+    {
+        static::$configId = trim(str_replace('_php', '', preg_replace('/[^\w]/', '_', $configFile)), '_');
+    }
+
+    /**
+     * Gets the config file identifier
+     * 
+     * @return string
+     */
+    public static function getConfigId(): string
+    {
+        return static::$configId;
+    }
+
+    /**
      * For test purposes, seed the config before querying
      * 
      * @param array the replacement config
@@ -161,16 +187,20 @@ class Bootstrap
      */
     private static function validateEnvArgument(\stdClass $config, Args $args): string
     {
-        $environment = $args->env ?? static::DEFAULT_ENV;
+        $environment = $args->env ?? '';
 
-        if (!preg_match('/[a-z0-9_]+/', $environment)) {
+        if ($environment != '' && !preg_match('/[a-z0-9_]+/', $environment)) {
             throw new \Exception(sprintf('Environment "%s" is not a valid name. Please use only a-z0-9 and _ characters.', $environment));
         }
-        if (!isset($config->environments->$environment)) {
-            throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
+        if ($environment != '' && isset($config->environments->$environment)) {
+            return $environment;
+        }
+        // Fallback to first
+        if ($environment == '' && count((array) $config->environments)) {
+            return array_keys((array) $config->environments)[0];
         }
 
-        return $environment;
+        throw new \Exception(sprintf('Unable to find environment "%s" in configuration.', $environment));
     }
 
 }

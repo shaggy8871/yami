@@ -14,6 +14,7 @@ class Mask implements CommandInterface
     public function execute(Args $args): void
     {
         $args->setAliases([
+            'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
         ]);

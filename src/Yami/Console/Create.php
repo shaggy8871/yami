@@ -12,6 +12,7 @@ class Create implements CommandInterface
     public function execute(Args $args): void
     {
         $args->setAliases([
+            'c' => 'config',
             'e' => 'env',
         ]);
 

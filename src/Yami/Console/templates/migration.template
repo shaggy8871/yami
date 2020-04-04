@@ -7,7 +7,7 @@ class {{ClassName}} extends AbstractMigration
     public function up()
     {
         $node = $this->get('.');
-        $node->set(['foo' => 'bar']);
+        $node->add(['foo' => 'bar']);
 
         $this->save();
     }
