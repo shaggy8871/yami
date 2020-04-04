@@ -11,5 +11,4 @@ class RootNodeMigration extends AbstractMigration
 
         $this->save();
     }
-
 }

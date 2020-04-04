@@ -30,14 +30,14 @@ class Migrate extends ConsoleAbstract
             $uniqueId = str_replace([$path, '.php'], '', $migration);
 
             // Extract version
-            preg_match('/[0-9]+/', $uniqueId, $matches);
+            preg_match('/[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{6}/', $uniqueId, $matches);
             if ($matches[0]) {
                 $version = $matches[0];
             } else {
                 throw new \Exception("Unable to parse version from migration.");
             }
 
-            $className = preg_replace_callback('/(_[a-z])/', function($m) {
+            $className = preg_replace_callback('/(_[a-z_])/', function($m) {
                 return strtoupper(str_replace('_', '', $m[0]));
             }, str_replace($version, '', $uniqueId));
 

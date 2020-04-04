@@ -1,6 +1,31 @@
 # Yami
 
-Yami is a PHP migration tool for YAML configuration files.
+Yami is a PHP migration tool for YAML files. It helps to keep track of changes to YAML files in the same way as a database migration tool does for database schema.
+
+It also includes a masking utility to hide sensitive data, and support for environment variable input (and validation) so it can be used within a CI system.
+
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Getting Started](#getting-started)
+3. [Creating Migrations](#creating-migrations)
+    - [get()](#get)
+    - [add()](#add)
+    - [set()](#set)
+    - [remove()](#remove)
+    - [has()](#has)
+    - [containsArray()](#containsArray)
+    - [containsType()](#containsType)
+    - [dump()](#dump)
+4. [Running Migrations](#running-migrations)
+5. [Rolling Back](#rolling-back)
+    - [Steps](#steps)
+    - [Targets](#targets)
+6. [Configuration Options](#configuration-options)
+    - [Custom Config Files](#custom-config-files)
+7. [Securing Data](#securing-data)
+    - [Environment Variables](#environment-variables)
+    - [Masking Values](#masking-values)
 
 ## Installation:
 
@@ -16,10 +41,231 @@ Then run:
 composer install
 ```
 
-1. Create a folder called `migrations`.
-2. Place your YAML file in the root of the folder.
-3. Create your configuration by running `vendor/bin/yami config`. Edit the created `config.php` file as necessary to point to your YAML file.
-4. Create a sample migration file by running `vendor/bin/yami create --class=TestClass`. It will create a file with name &lt;date&gt;_test_class.php as follows:
+## Getting Started
+
+Create a configuration file by running `vendor/bin/yami config` from your command line. A basic configuration script will be created as follows.
+
+```php
+<?php
+
+return [
+    'environments' => [
+        'default' => [
+            'yamlFile' => 'default.yaml',
+            'path' => './migrations',
+        ],
+    ],
+    'save' => [
+        'indentation' => 2,
+    ]
+];
+```
+
+The configuration file supports one or more environments. An environment requires a minimum of two keys:
+
+- `yamlFile` - the path to the YAML file, relative to root of your Yami install.
+- `path` - the path to the `migrations` directory, relative to root of your Yami install.
+
+Further configuration options are outlined below.
+
+If you don't have a directory for your migrations, you can create one as follows:
+```bash
+mkdir migrations
+```
+
+## Creating Migrations
+
+To create a migration script, run:
+```
+vendor/bin/yami create --migration=TestMigration -e default
+```
+
+The `migration` parameter is mandatory and should be a CamelCase style name to describe your migration. Yami will create a migration script in the `path` specified by the environment. The `-e default` parameter specifies which environment's settings to use. If an environment is not specified, the first one found in your configuration script is used as default.
+
+A basic migration script looks as follows:
+
+```php
+<?php
+
+use Yami\Migration\AbstractMigration;
+
+class TestMigration extends AbstractMigration
+{
+
+    public function up()
+    {
+        $node = $this->get('.');
+        $node->add(['foo' => 'bar']);
+
+        $this->save();
+    }
+
+    public function down()
+    {
+        $node = $this->get('.');
+        $node->remove('foo');
+
+        $this->save();
+    }
+
+}
+```
+
+The `up()` method is called when migrating. The `down()` method is called when rolling back.
+
+Each migration follows a simple set of steps:
+
+1. Find the base node.
+2. Make changes to the contents within.
+
+Once you have completed your manipulation of the node, call `$this->save()` to save your changes back to the file. If the `--dry-run` flag is set, changes will be output to the screen, but no changes will be written to the file.
+
+### get()
+
+The `$this->get()` method expects a search string that follows primitive `jq`-style formatting. The most basic search is `.` which represents the root of the YAML file. Calling `$this->get('.')` will allow you to manipulate the entire YAML file. This search should only be used when adding a node to the bottom of the YAML file.
+
+Searching for a specific element within the root can be done by specifying the node name immediately after the `'.'`. If your YAML file looks as follows:
+
+```yaml
+foo:
+  bar: baz
+```
+
+you can access and manipulate the contents of `foo` by calling `$this->get('.foo')`. Similarly you can access the `foo` > `bar` node by calling `$this->get('.foo.bar')`.
+
+To search for specific elements within an array, add the array index in `[]` brackets. For instance, to access the first element of an array called `foo` > `bar`, call `$this->get('.foo.bar.[0])`.
+
+Once you have a node, you can perform one or more operations on it.
+
+### add()
+
+The `add()` method allows you to add to an existing node, or the root of the YAML file. You cannot `add()` if you try to append a value to a scalar value. So using the example YAML above, this will work:
+
+```php
+$node = $this->get('.');
+$node->add(['foo' => 'bar']);
+```
+
+But this won't:
+
+```php
+$node = $this->get('.foo.bar');
+$node->add(['new' => 'value']);
+```
+
+This is because `foo` > `bar` contains a scalar string value of `baz` that cannot be turned into an array.
+
+The `add()` method supports adding of either a scalar value, or an array of key/value pairs. If a scalar value is supplied, it will be added as an array element. If a key/value pair is added, it will be added as a map element.
+
+### set()
+
+The `set()` method allows you to overwrite the entire contents of the node. Be careful with this as it could remove entire trees from within a node. The `set()` method should not be used on the root `.` node as it will replace the entire YAML file with whatever value is specified.
+
+### remove()
+
+The `remove()` method will remove one or more maps or elements from the node. You can pass a single key as a string, for example `$this->remove('bar')` or an array of keys to remove multiple sub-nodes, for instance `$this->remove(['bar', 'baz'])`.
+
+### has()
+
+Returns true if the node contains a sub-node with the name specified. For example `$this->has('foo')`.
+
+### containsArray()
+
+Identical to `has()` but also checks if the sub-node is an array. Use as `$this->containsArray('foo')`.
+
+### containsType()
+
+Identical to `has()` but also validates the type of scalar content. Usage is `$this->containsType('foo', 'string')`. Valid types includes `integer`, `string`, `float` and `boolean`.
+
+### dump()
+
+Dumps the node's contents to `stdout`.
+
+## Running Migrations
+
+To test the migrations without overriding the YAML file, run `vendor/bin/yami migrate --dry-run`.
+
+To commit and save the migration, run `vendor/bin/yami migrate`.
+
+Caution: If you don't specify an environment using the `--env=<environment>` or `-e <environment>` parameter, the default environment will be used which may not be what is expected.
+
+## Rolling Back
+
+If you need to roll back migrations, run `vendor/bin/yami rollback`. You may optionally pass in the `--dry-run` parameter to see the outcome without committing changes.
+
+If no additional parameters are specified, Yami will roll back the last batch of changes.
+
+### Steps
+
+To specify a specific number of migrations to roll back, use the `--step=X` or `-s X` parameter. For instance `vendor/bin/yami rollback -s 1` will roll back a single migration only.
+
+### Targets
+
+To roll back to a specific target migration, use the `--target=X` or `-t X` parameter. For instance `vendor/bin/yami rollback -t 2020_04_03_001122_test_migration` will roll back up to and including this migration, but no further.
+
+## Configuration Options
+
+The following configuration options may be added to your config file to customise the behaviour of Yami.
+
+| option             | description | default |
+|--------------------|---|---|
+| *load* 
+| - asObject           | See [Yaml::PARSE_OBJECT](https://symfony.com/doc/current/components/yaml.html#object-parsing-and-dumping) | false |
+| - asYamlMap          | See [Yaml::PARSE_OBJECT_FOR_MAP](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-objects-as-maps) | false |
+| *save*
+| - indentation        | the number of spaces to indent | 2 |
+| - maskValues         | save values as `(masked)` instead of actual value | false |
+| - removeEmptyNodes   | remove all empty nodes | true |
+| - inlineFromLevel    | how many levels to support before outputting values in JSON object notation | 10 |
+| - asObject           | See [Yaml::DUMP_OBJECT](https://symfony.com/doc/current/components/yaml.html#object-parsing-and-dumping) | false | 
+| - asYamlMap          | See [Yaml::DUMP_OBJECT_AS_MAP](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-objects-as-maps) | false | 
+| - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false | 
+| - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
+| - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
+
+You can also add any of these configuration options within specific environments to customise how specific environments behave. For example:
+
+```php
+<?php
+
+return [
+    'environments' => [
+        'default' => [
+            'yamlFile' => 'default.yaml',
+            'path' => './migrations',
+            'save' => [
+                'maskValues' => true,
+                'indentation' => 4,
+            ]
+        ],
+    ],
+    'save' => [
+        'indentation' => 2,
+    ]
+];
+```
+
+Environment specific values will override general configuration values when using that environment.
+
+### Custom Config Files
+
+To support multiple projects, you can set up multiple configuration files. To use a different configuration file to the default, simple pass it in using the `--config=<file>` or `-c <file>` parameter. For example:
+
+```bash
+vendor/bin/yami migrate -c ./projects/api/config.php
+```
+
+will run migrations using the default environment specified in this configuration file.
+
+## Securing Data
+
+To keep credentials and other sensitive data secure, Yami introduces two complementary features.
+
+### Environment Variables
+
+Instead of hard coding values into migrations, which may accidentally end up in source code repositories, you can pass them in only when running migrations.
+
+Environment variables can be validated prior to running migrations, and can be made to fail if the supplied data doesn't match what is expected.
 
 ```php
 <?php
@@ -30,20 +276,48 @@ class TestClass extends AbstractMigration
 {
     public function up()
     {
-        $rootNode = $this->get('.');
-        $rootNode->add(['foo' => 'bar']);
+        $node = $this->get('.');
+        $node->add([
+            'foo' => 'bar',
+            'access_key_id' => $this->env('access_key_id', [
+                'required', 
+                'default' => '', 
+                'type' => 'string'
+            ]),
+            'secret_key_id' => $this->env('secret_key_id', [
+                'required', 
+                'default' => '', 
+                'type' => 'string'
+            ])
+        ]);
 
         $this->save();
     }
 }
 ```
 
-This will add a node to the root of your YAML file as follows:
+When running the migration, the values may be passed in via command line:
 
-```yaml
-foo: bar
+```bash
+access_key_id=<value> secret_key_id=<value> vendor/bin/yami migrate
 ```
 
-To dry run the migrations without saving, run `vendor/bin/yami migrate --dry-run`.
+Multiple environment variables can be passed in by separating each with a space.
 
-To commit and save the migration, run `vendor/bin/yami migrate`.
+### Masking Values
+
+Migrations don't need actual values to run, as they are mainly concerned with the structure of the file. To allow developers to test migrations without exposing sensitive data, Yami allows you to mask values.
+
+A utility has been provided to mask all values within an existing YAML file. Simply call:
+
+```bash
+vendor/bin/yami mask
+```
+
+You can optionally pass in `-c` and `-e` parameters to customise the config file and environment accordingly.
+
+The original file will be backed up in the same location prior to masking, in case you need to recover the data.
+
+Masked YAML files are safe to commit. Unmasked YAML files should never be committed to a source code repository.
+
+To ensure that changes remain masked even after migrations, use the `maskValues` [configuration option](#configuration-options).

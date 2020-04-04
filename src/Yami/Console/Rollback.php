@@ -32,7 +32,7 @@ class Rollback extends ConsoleAbstract
         return array_map(function(\stdClass $m) {
 
             // Extract version
-            preg_match('/[0-9]+/', $m->migration, $matches);
+            preg_match('/[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{6}/', $m->migration, $matches);
             if ($matches[0]) {
                 $version = $matches[0];
             } else {

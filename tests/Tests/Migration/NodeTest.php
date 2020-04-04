@@ -69,6 +69,17 @@ class NodeTest extends TestCase
         $this->assertEquals($node->get(), ['bar' => 'baz']);
     }
 
+    public function testAddArrayOnMap(): void
+    {
+        $node = new Node([
+            'foo' => 'bar'
+        ], '.');
+
+        $node->add('element1');
+
+        $this->assertEquals($node->get(), ['foo' => 'bar', 'element1']);
+    }
+
     public function testRemoveOnMap(): void
     {
         $node = new Node([

@@ -11,5 +11,4 @@ class RemoveEmpty extends AbstractMigration
 
         $this->save();
     }
-
 }

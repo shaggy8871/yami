@@ -57,7 +57,7 @@ class Node
     public function add($value): self
     {
         if (is_array($this->value)) {
-            $this->value = array_merge($this->value, (is_array($value) ? $value : []));
+            $this->value = array_merge($this->value, (is_array($value) ? $value : [$value]));
             return $this;
         }
         // Special case for empty nodes

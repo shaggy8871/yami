@@ -104,29 +104,11 @@ abstract class AbstractMigration
     /**
      * Write out the YAML file
      */
-    public function save()
+    public function save(): void
     {
         $this->syncNode();
 
         Adapter::save($this->yaml, $this->config, $this->environment);
-    }
-
-    /**
-     * Identical to save() but checks that the file does not 
-     * exist prior to saving.
-     */
-    public function create()
-    {
-
-    }
-
-    /**
-     * Identical to save() but checks that the file exists
-     * prior to saving.
-     */
-    public function update()
-    {
-
     }
 
     /**
