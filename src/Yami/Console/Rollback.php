@@ -96,7 +96,7 @@ class Rollback extends ConsoleAbstract
      */
     protected function getMigrationsFromBatch(int $batchNo): array
     {
-        return array_filter($this->history, function(\stdClass $h) use ($batchNo) {
+        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($batchNo) {
             list($b, $iteration) = explode('.', $h->batchId);
             return $b == $batchNo;
         });
