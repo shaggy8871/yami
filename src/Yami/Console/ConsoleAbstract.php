@@ -104,9 +104,9 @@ abstract class ConsoleAbstract implements CommandInterface
                         $rendererOptions = [
                             'detailLevel' => 'line',
                             'language' => 'eng',
-                            'resultForIdenticals' => null,
+                            'resultForIdenticals' => "> no changes\n",
                         ];
-                        echo DiffHelper::calculateFiles($originalYaml, $this->environment->yamlFile, 'Unified', $differOptions, $rendererOptions) . "\n";
+                        echo DiffHelper::calculateFiles($originalYaml, $this->environment->yamlFile, 'ColourUnified', $differOptions, $rendererOptions) . "\n";
                     } else {
                         $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }

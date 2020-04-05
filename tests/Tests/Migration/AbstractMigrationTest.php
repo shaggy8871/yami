@@ -119,6 +119,8 @@ class AbstractMigrationTest extends TestCase
         ]);
         $mockYaml = Bootstrap::createMockYaml($args, "foo: \n  bar: baz");
 
+        $environment = Bootstrap::getEnvironment($args);
+
         $migration = (object) [
             'filePath' => './tests/migrations/0000000003_add_element_to_map.php',
             'uniqueId' => '0000000003_add_element_to_map'
@@ -131,7 +133,7 @@ class AbstractMigrationTest extends TestCase
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals(file_get_contents($mockYaml), "foo:\n  bar: baz\n  0: element1\n");
+        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar: baz\n  0: element1\n");
 
         Bootstrap::deleteMockYaml($args);
     }

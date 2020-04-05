@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "eb31c82540698334eaad69dda9b23d8b",
+    "content-hash": "8c1e924628f49936d56518a700f9daed",
     "packages": [
         {
             "name": "jfcherng/php-diff",
             "version": "v6.x-dev",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jfcherng/php-diff.git",
-                "reference": "007abaf07ad04e722a30c8163f712a228bbfe375"
+                "url": "https://github.com/shaggy8871/php-diff.git",
+                "reference": "f3a4cdc6ab642efd0f91f6d47899c94596f6fa0c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jfcherng/php-diff/zipball/007abaf07ad04e722a30c8163f712a228bbfe375",
-                "reference": "007abaf07ad04e722a30c8163f712a228bbfe375",
+                "url": "https://api.github.com/repos/shaggy8871/php-diff/zipball/f3a4cdc6ab642efd0f91f6d47899c94596f6fa0c",
+                "reference": "f3a4cdc6ab642efd0f91f6d47899c94596f6fa0c",
                 "shasum": ""
             },
             "require": {
@@ -160,12 +160,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/shaggy8871/console.git",
-                "reference": "7778eeb1843ebd6c96003f0b206d32bc128d32c3"
+                "reference": "6053cf8e37622b5f7cc03d10cca53e07338bcba2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/shaggy8871/console/zipball/7778eeb1843ebd6c96003f0b206d32bc128d32c3",
-                "reference": "7778eeb1843ebd6c96003f0b206d32bc128d32c3",
+                "url": "https://api.github.com/repos/shaggy8871/console/zipball/6053cf8e37622b5f7cc03d10cca53e07338bcba2",
+                "reference": "6053cf8e37622b5f7cc03d10cca53e07338bcba2",
                 "shasum": ""
             },
             "require": {
@@ -191,7 +191,7 @@
                 }
             ],
             "description": "Console is a lightweight console framework for PHP",
-            "time": "2019-06-28T11:26:05+00:00"
+            "time": "2020-04-05T16:30:47+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -358,6 +358,20 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
             "time": "2020-03-30T11:43:41+00:00"
         }
     ],
@@ -463,6 +477,12 @@
                 "duplicate",
                 "object",
                 "object graph"
+            ],
+            "funding": [
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/myclabs/deep-copy",
+                    "type": "tidelift"
+                }
             ],
             "time": "2020-03-12T21:49:07+00:00"
         },
@@ -1044,12 +1064,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "67750516bc02f300e2742fed2f50177f8f37bedf"
+                "reference": "6f19efdc4bf8113f72e2eaccd12ad758df4ba789"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/67750516bc02f300e2742fed2f50177f8f37bedf",
-                "reference": "67750516bc02f300e2742fed2f50177f8f37bedf",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/6f19efdc4bf8113f72e2eaccd12ad758df4ba789",
+                "reference": "6f19efdc4bf8113f72e2eaccd12ad758df4ba789",
                 "shasum": ""
             },
             "require": {
@@ -1119,7 +1139,17 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2020-03-31T08:52:04+00:00"
+            "funding": [
+                {
+                    "url": "https://phpunit.de/donate.html",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/sebastianbergmann",
+                    "type": "github"
+                }
+            ],
+            "time": "2020-04-03T05:57:47+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",

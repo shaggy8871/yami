@@ -9,12 +9,18 @@
             "email": "john.ginsberg@tristadeca.com"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/shaggy8871/php-diff"
+        }
+    ],
     "minimum-stability": "dev",
     "require": {
         "php": ">=7.4.0",
         "symfony/yaml": "^5.0",
-        "shaggy8871/console": ">=1.0.4",
-        "jfcherng/php-diff": "v6.x-dev"
+        "shaggy8871/console": ">=1.0.5",
+        "jfcherng/php-diff": "dev-v6"
     },
     "require-dev": {
         "phpunit/phpunit": "^8"
