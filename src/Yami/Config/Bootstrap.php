@@ -107,7 +107,7 @@ class Bootstrap
 
         static::$config->environments->$environment->yamlFile = $mockFilename;
 
-        return $mockFilename;
+        return $originalYaml;
     }
 
     /**

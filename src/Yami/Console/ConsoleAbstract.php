@@ -76,7 +76,7 @@ abstract class ConsoleAbstract implements CommandInterface
              Decorate::color(sprintf(" found\n\n", count($migrations)), 'white');
 
         if ($isDryRun) {
-            $mockYaml = Bootstrap::createMockYaml($args);
+            $originalYaml = Bootstrap::createMockYaml($args);
         }
 
         $iteration = 0;
@@ -106,7 +106,7 @@ abstract class ConsoleAbstract implements CommandInterface
                             'language' => 'eng',
                             'resultForIdenticals' => null,
                         ];
-                        echo DiffHelper::calculateFiles($this->environment->yamlFile, $mockYaml, 'Unified', $differOptions, $rendererOptions) . "\n\n";
+                        echo DiffHelper::calculateFiles($originalYaml, $this->environment->yamlFile, 'Unified', $differOptions, $rendererOptions) . "\n";
                     } else {
                         $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }
