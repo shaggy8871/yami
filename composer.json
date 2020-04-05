@@ -20,7 +20,7 @@
         "php": ">=7.4.0",
         "symfony/yaml": "^5.0",
         "shaggy8871/console": ">=1.0.5",
-        "jfcherng/php-diff": "dev-v6"
+        "jfcherng/php-diff": "v6.6.5"
     },
     "require-dev": {
         "phpunit/phpunit": "^8"

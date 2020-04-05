@@ -77,6 +77,7 @@ abstract class ConsoleAbstract implements CommandInterface
 
         if ($isDryRun) {
             $originalYaml = Bootstrap::createMockYaml($args);
+            $diffPrev = file_get_contents($originalYaml);
         }
 
         $iteration = 0;
@@ -106,13 +107,15 @@ abstract class ConsoleAbstract implements CommandInterface
                             'language' => 'eng',
                             'resultForIdenticals' => "> no changes\n",
                         ];
-                        echo DiffHelper::calculateFiles($originalYaml, $this->environment->yamlFile, 'ColourUnified', $differOptions, $rendererOptions) . "\n";
+                        $diffCurr = file_get_contents($this->environment->yamlFile);
+                        echo DiffHelper::calculate($diffPrev, $diffCurr, 'ColourUnified', $differOptions, $rendererOptions) . "\n";
+                        $diffPrev = $diffCurr;
                     } else {
                         $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }
                 } catch (\Exception $e) {
                     echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');
-                    echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
+                    echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray');
                     if ($isDryRun) {
                         Bootstrap::deleteMockYaml($args);
                     }
@@ -120,7 +123,7 @@ abstract class ConsoleAbstract implements CommandInterface
                 }
             } else {
                 echo Decorate::color(sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red');
-                echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
+                echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray');
                 if ($isDryRun) {
                     Bootstrap::deleteMockYaml($args);
                 }

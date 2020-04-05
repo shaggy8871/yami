@@ -30,9 +30,18 @@ It also includes a masking utility to hide sensitive data, and support for envir
 ## Installation:
 
 In composer.json:
-```
-"require": {
-    "shaggy8871/yami": "dev-master"
+```yaml
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/shaggy8871/php-diff"
+        }
+    ],
+    "require": {
+        "shaggy8871/yami": "dev-master"
+    },
+    "minimum-stability": "dev"
 }
 ```
 

@@ -4,11 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8c1e924628f49936d56518a700f9daed",
+    "content-hash": "6d40146daf9f1216342e13ad8c0fd6e9",
     "packages": [
         {
             "name": "jfcherng/php-diff",
-            "version": "v6.x-dev",
+            "version": "6.6.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shaggy8871/php-diff.git",
@@ -23,7 +23,8 @@
             "require": {
                 "jfcherng/php-mb-string": "^1.3",
                 "jfcherng/php-sequence-matcher": "^3.2.2",
-                "php": "^7.1.3"
+                "php": "^7.1.3",
+                "shaggy8871/console": "^1.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^2.16",
@@ -37,7 +38,27 @@
                     "Jfcherng\\Diff\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Jfcherng\\Diff\\Test\\": "tests/"
+                }
+            },
+            "scripts": {
+                "analyze": [
+                    "phan --color",
+                    "phpcs --colors -n"
+                ],
+                "fix": [
+                    "php-cs-fixer fix --verbose"
+                ],
+                "server": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "@php -S localhost:12388 -t example/"
+                ],
+                "test": [
+                    "phpunit --verbose"
+                ]
+            },
             "license": [
                 "BSD-3-Clause"
             ],
@@ -58,13 +79,16 @@
                 "unidiff",
                 "unified diff"
             ],
+            "support": {
+                "source": "https://github.com/shaggy8871/php-diff/tree/v6"
+            },
             "funding": [
                 {
-                    "url": "https://www.paypal.me/jfcherng/5usd",
-                    "type": "custom"
+                    "type": "custom",
+                    "url": "https://www.paypal.me/jfcherng/5usd"
                 }
             ],
-            "time": "2020-03-31T16:02:39+00:00"
+            "time": "2020-04-05T16:37:15+00:00"
         },
         {
             "name": "jfcherng/php-mb-string",
@@ -156,7 +180,7 @@
         },
         {
             "name": "shaggy8871/console",
-            "version": "dev-master",
+            "version": "1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/shaggy8871/console.git",
@@ -1857,9 +1881,7 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "jfcherng/php-diff": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
