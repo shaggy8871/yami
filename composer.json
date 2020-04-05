@@ -13,7 +13,8 @@
     "require": {
         "php": ">=7.4.0",
         "symfony/yaml": "^5.0",
-        "shaggy8871/console": ">=1.0.4"
+        "shaggy8871/console": ">=1.0.4",
+        "jfcherng/php-diff": "v6.x-dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^8"

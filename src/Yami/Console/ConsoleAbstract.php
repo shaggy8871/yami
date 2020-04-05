@@ -5,6 +5,7 @@ namespace Yami\Console;
 use Yami\Console\Traits\HistoryTrait;
 use Console\{CommandInterface, Args, Decorate};
 use Yami\Config\Bootstrap;
+use Jfcherng\Diff\DiffHelper;
 
 abstract class ConsoleAbstract implements CommandInterface
 {
@@ -95,7 +96,17 @@ abstract class ConsoleAbstract implements CommandInterface
                     echo Decorate::color("OK!\n", 'green');
 
                     if ($isDryRun) {
-                        echo trim(file_get_contents($mockYaml)) . "\n\n";
+                        $differOptions = [
+                            'context' => 3,
+                            'ignoreCase' => false,
+                            'ignoreWhitespace' => false,
+                        ];
+                        $rendererOptions = [
+                            'detailLevel' => 'line',
+                            'language' => 'eng',
+                            'resultForIdenticals' => null,
+                        ];
+                        echo DiffHelper::calculateFiles($this->environment->yamlFile, $mockYaml, 'Unified', $differOptions, $rendererOptions) . "\n\n";
                     } else {
                         $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }
