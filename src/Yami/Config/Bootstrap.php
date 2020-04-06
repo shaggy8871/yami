@@ -57,6 +57,8 @@ class Bootstrap
         }
 
         if ($args->config) {
+            // Normalise config file path
+            $args->config = '.' . str_replace(getcwd(), '', realpath($args->config));
             if (!file_exists($args->config)) {
                 throw new \Exception(sprintf('Unable to find config file %s.', $args->config));
             }
@@ -66,7 +68,7 @@ class Bootstrap
         if (file_exists($configFile)) {
             $customConfig = include($configFile);
         } else {
-            throw new \Exception('Cannot find config file %s. Run `vendor/bin/yami config` to create one.');
+            throw new \Exception(sprintf('Cannot find config file %s. Run `vendor/bin/yami config` to create one.', $configFile));
         }
 
         // Save config file id

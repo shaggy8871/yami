@@ -31,7 +31,7 @@ class Adapter
             // Convert to array
             $yaml = json_decode(json_encode($yaml), true);
         } catch (ParseException $e) {
-            throw new \Exception(sprintf('Unable to parse YAML file "%s".', $environment->yamlFile));
+            throw new \Exception(sprintf('Unable to parse YAML file: %s', $e->getMessage()));
         }
 
         return $yaml;

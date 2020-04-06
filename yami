@@ -38,7 +38,7 @@ $console->registerAll([
 try {
     $console->run();
 } catch(Throwable $t) {
-    echo Console\Decorate::color($t->getMessage(), 'red bold') . "\n--------\n\n" . $console->getHelp();
+    echo Console\Decorate::color($t, 'red bold') . "\n--------\n\n" . $console->getHelp();
     exit(1);
 }
 

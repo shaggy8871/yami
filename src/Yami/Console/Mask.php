@@ -22,7 +22,7 @@ class Mask implements CommandInterface
         $config = Bootstrap::getConfig($args);
         $environment = Bootstrap::getEnvironment($args);
 
-        $isDryRun = array_key_exists('dry-run', $args->getAll());
+        $isDryRun = array_key_exists('dry-run', $args->getAll()) || array_key_exists('d', $args->getAll());
         $yamlFile = $environment->yamlFile;
 
         Bootstrap::createMockYaml($args);

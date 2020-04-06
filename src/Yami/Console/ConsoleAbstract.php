@@ -57,10 +57,10 @@ abstract class ConsoleAbstract implements CommandInterface
         $this->loadHistory(true);
 
         $lastBatchNo = $this->getLastBatchNo();
-        $isDryRun = array_key_exists('dry-run', $args->getAll());
+        $isDryRun = array_key_exists('dry-run', $args->getAll()) || array_key_exists('d', $args->getAll());
         $migrations = $this->getMigrations($lastBatchNo);
 
-        echo Decorate::color("Using configuration: ", 'white') . Decorate::color(sprintf("%s\n", $args->config ? './' . $args->config : './config.php'), 'light_blue');
+        echo Decorate::color("Using configuration: ", 'white') . Decorate::color(sprintf("%s\n", $args->config ? $args->config : './config.php'), 'light_blue');
         if ($this->environment->name != $args->env) {
             echo Decorate::color(sprintf("Warning, no environment specified; defaulting to '%s'\n", $this->environment->name), 'light_red');
         } else {
