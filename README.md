@@ -2,7 +2,7 @@
 
 Yami is a PHP migration tool for YAML files. It helps to keep track of changes to YAML files in the same way as a database migration tool does for database schema.
 
-It also includes a masking utility to hide sensitive data, and support for environment variable input (and validation) so it can be used within a CI system.
+It also includes a masking utility to hide sensitive data, and support for Secrets Manager and environment variable input (and validation) so it can be used within a CI system.
 
 ## Table of Contents
 
