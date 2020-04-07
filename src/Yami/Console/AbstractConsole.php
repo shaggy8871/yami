@@ -7,7 +7,7 @@ use Console\{CommandInterface, Args, Decorate};
 use Yami\Config\Bootstrap;
 use Jfcherng\Diff\DiffHelper;
 
-abstract class ConsoleAbstract implements CommandInterface
+abstract class AbstractConsole implements CommandInterface
 {
 
     use HistoryTrait;

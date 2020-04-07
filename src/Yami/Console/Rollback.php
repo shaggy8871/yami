@@ -5,7 +5,7 @@ namespace Yami\Console;
 use Console\{CommandInterface, Args, Decorate};
 use Yami\Migration\AbstractMigration;
 
-class Rollback extends ConsoleAbstract
+class Rollback extends AbstractConsole
 {
 
     const ACTION = AbstractMigration::ACTION_ROLLBACK;

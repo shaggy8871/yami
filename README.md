@@ -24,7 +24,7 @@ It also includes a masking utility to hide sensitive data, and support for envir
 6. [Configuration Options](#configuration-options)
     - [Custom Config Files](#custom-config-files)
 7. [Securing Data](#securing-data)
-    - [Environment Variables](#environment-variables)
+    - [Secrets](#secrets)
     - [Masking Values](#masking-values)
 
 ## Installation:
@@ -270,11 +270,39 @@ will run migrations using the default environment specified in this configuratio
 
 To keep credentials and other sensitive data secure, Yami introduces two complementary features.
 
-### Environment Variables
+### Secrets
 
-Instead of hard coding values into migrations, which may accidentally end up in source code repositories, you can pass them in only when running migrations.
+Instead of hard coding values into migrations, which may accidentally end up in source code repositories, Yami can look them up while running migrations.
 
-Environment variables can be validated prior to running migrations, and can be made to fail if the supplied data doesn't match what is expected.
+Secrets may be passed in via a third party Secrets Manager, or via environment variables.
+
+Secrets will be validated prior to running migrations, and will fail if the supplied data doesn't match what is expected.
+
+To configure a Secrets Manager, add the following in your config file:
+
+```php
+<?php
+
+return [
+    'environments' => [
+        'default' => [
+            'yamlFile' => 'default.yaml',
+            'path' => './migrations',
+            'secretsManager' => [
+                'adapter' => 'ssm',
+                'credentials' => [
+                    'profile' => 'default',
+                    'region' => 'us-east-1'
+                ]
+            ]
+        ]
+    ]
+];
+```
+
+Currently only `local` (using environment variables) and `ssm` (using AWS SSM) adapters are supported as native. If no Secrets Manager is specified, it will default to `local`. Using SSM requires the installation of the [AWS SDK for PHP](https://github.com/aws/aws-sdk-php).
+
+If you prefer to write your own Secrets Manager class, it must implement the `Yami\Secrets\SecretsManagerInterface` interface, and the fully qualified class name should be passed in via the `adapter` parameter.
 
 ```php
 <?php
@@ -288,12 +316,12 @@ class TestClass extends AbstractMigration
         $node = $this->get('.');
         $node->add([
             'foo' => 'bar',
-            'access_key_id' => $this->env('access_key_id', [
+            'access_key_id' => $this->secret('/api/production/s3/access_key_id', [
                 'required', 
                 'default' => '', 
                 'type' => 'string'
             ]),
-            'secret_key_id' => $this->env('secret_key_id', [
+            'secret_key_id' => $this->secret('/api/production/s3/secret_key_id', [
                 'required', 
                 'default' => '', 
                 'type' => 'string'
@@ -305,10 +333,12 @@ class TestClass extends AbstractMigration
 }
 ```
 
-When running the migration, the values may be passed in via command line:
+Secret key names will be normalised to valid environment variables, so `/api/production/s3/secret_key_id` will look for an environment variable called `api_production_s3_SecretKeyId`.
+
+When running the migration, environment variables may be passed in via command line:
 
 ```bash
-access_key_id=<value> secret_key_id=<value> vendor/bin/yami migrate
+api_production_s3_SecretKeyId=<value> vendor/bin/yami migrate
 ```
 
 Multiple environment variables can be passed in by separating each with a space.

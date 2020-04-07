@@ -5,6 +5,7 @@ namespace Yami\Migration;
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
 use Yami\Yaml\Adapter;
+use Yami\Secrets\{SecretsManagerFactory, Utils as SecretsUtil};
 use Console\Args;
 
 abstract class AbstractMigration
@@ -112,16 +113,22 @@ abstract class AbstractMigration
     }
 
     /**
-     * Get an environment variable and validate it
+     * Get a secret value and validate it
      * 
      * @param string the name of the variable
      * @param array a list of validations to apply
      * 
      * @return mixed
      */
-    public function env(string $name, array $validations = [])
+    public function secret(string $name, array $validations = [])
     {
-        $value = getenv($name);
+        if (isset($this->environment->secretsManager)) {
+            $secretsManager = SecretsManagerFactory::instantiate($this->environment->secretsManager);
+            $value = $secretsManager->get($name);
+        } else {
+            $secretsManager = SecretsManagerFactory::instantiate();
+            $value = $secretsManager->get($name);
+        }
 
         if (isset($validations['default'])) {
             if ($value === false) {
@@ -129,9 +136,9 @@ abstract class AbstractMigration
             }
         }
         if (in_array('required', $validations)) {
-            if ($value === false) {
-                throw new \Exception(sprintf('Missing required environment variable "%s".', $name));
-            }        
+            if ($value === false || $value === '') {
+                throw new \Exception(sprintf('Missing required environment variable "%s".', SecretsUtil::keyToEnv($name)));
+            }
         }
         if (isset($validations['type'])) {
             switch($validations['type']) {

@@ -6,7 +6,7 @@ use Console\{CommandInterface, Args, Decorate};
 use Yami\Config\Bootstrap;
 use Yami\Migration\AbstractMigration;
 
-class Migrate extends ConsoleAbstract
+class Migrate extends AbstractConsole
 {
 
     const ACTION = AbstractMigration::ACTION_MIGRATE;
@@ -21,8 +21,7 @@ class Migrate extends ConsoleAbstract
      */
     protected function getMigrations(int $lastBatchNo): array
     {
-        $environment = Bootstrap::getEnvironment($this->args);
-        $path = $environment->path . '/';
+        $path = $this->environment->path . '/';
 
         $migrations = [];
 
@@ -65,7 +64,14 @@ class Migrate extends ConsoleAbstract
      */
     protected function getMessages(int $batchNo): string
     {
-        return Decorate::color('Batch id: ', 'white') . Decorate::color(sprintf("%d\n", $batchNo + 1), 'light_blue');
+        $messages = '';
+        if (isset($this->environment->secretsManager) && isset($this->environment->secretsManager->adapter)) {
+            $messages .= Decorate::color('Using secrets manager: ', 'white') . Decorate::color(sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue');
+        }
+
+        $messages .= Decorate::color('Batch id: ', 'white') . Decorate::color(sprintf("%d\n", $batchNo + 1), 'light_blue');
+
+        return $messages;
     }
 
     /**
