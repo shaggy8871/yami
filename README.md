@@ -1,8 +1,11 @@
 # Yami
 
-Yami is a PHP migration tool for YAML files. It helps to keep track of changes to YAML files in the same way as a database migration tool does for database schema.
+Yami is a PHP migration tool for YAML files. It offers multiple advantages over command line tools or source code management systems:
 
-It also includes a masking utility to hide sensitive data, and support for Secrets Manager and environment variable input (and validation) so it can be used within a CI system.
+- It maintains a history of changes to one or more YAML files, and the ability to roll back in batches or to a particular point in time.
+- It focuses on the structure of the YAML file rather than the data, and allows the data to be injected from multiple sources including a Secrets Manager or environment variables.
+- It's ideal for CI systems and can be implemented as part of a larger workflow of updates during testing or deployment.
+- Writing migrations is easy and doesn't require an additional set of skills or command line utilities.
 
 ## Table of Contents
 
@@ -32,16 +35,16 @@ It also includes a masking utility to hide sensitive data, and support for Secre
 In composer.json:
 ```yaml
 {
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/shaggy8871/php-diff"
-        }
-    ],
-    "require": {
-        "shaggy8871/yami": "dev-master"
-    },
-    "minimum-stability": "dev"
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/shaggy8871/php-diff"
+    }
+  ],
+  "require": {
+    "shaggy8871/yami": "dev-master"
+  },
+  "minimum-stability": "dev"
 }
 ```
 
@@ -232,21 +235,31 @@ The following configuration options may be added to your config file to customis
 | - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
 | - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
 
-You can also add any of these configuration options within specific environments to customise how specific environments behave. For example:
+You can also add any of these configuration options within specific environments to customise how each environment behaves. For example:
 
 ```php
 <?php
 
 return [
     'environments' => [
-        'default' => [
-            'yamlFile' => 'default.yaml',
+        /**
+         * The development.yaml file may be committed if it's masked
+         */
+        'development' => [
+            'yamlFile' => 'development.yaml',
             'path' => './migrations',
             'save' => [
                 'maskValues' => true,
                 'indentation' => 4,
             ]
         ],
+        /**
+         * The production.yaml file is not masked, so should not be committed
+         */
+        'production' => [
+            'yamlFile' => 'production.yaml',
+            'path' => './migrations',
+        ]
     ],
     'save' => [
         'indentation' => 2,
@@ -274,11 +287,11 @@ To keep credentials and other sensitive data secure, Yami introduces two complem
 
 Instead of hard coding values into migrations, which may accidentally end up in source code repositories, Yami can look them up while running migrations.
 
-Secrets may be passed in via a third party Secrets Manager, or via environment variables.
+Secrets may be pulled from a third party Secrets Manager, or passed in via environment variables.
 
 Secrets will be validated prior to running migrations, and will fail if the supplied data doesn't match what is expected.
 
-To configure a Secrets Manager, add the following in your config file:
+To configure a Secrets Manager, add the following in your config file, within the appropriate environments:
 
 ```php
 <?php
@@ -321,7 +334,7 @@ class TestClass extends AbstractMigration
                 'default' => '', 
                 'type' => 'string'
             ]),
-            'secret_key_id' => $this->secret('/api/production/s3/secret_key_id', [
+            'secret_access_key' => $this->secret('/api/production/s3/secret_access_key', [
                 'required', 
                 'default' => '', 
                 'type' => 'string'
@@ -335,13 +348,13 @@ class TestClass extends AbstractMigration
 
 Secret key names will be normalised to valid environment variables, so `/api/production/s3/secret_key_id` will look for an environment variable called `api_production_s3_SecretKeyId`.
 
-When running the migration, environment variables may be passed in via command line:
+When running the migration, environment variables may be passed in via command line as follows:
 
 ```bash
-api_production_s3_SecretKeyId=<value> vendor/bin/yami migrate
+export api_production_s3_AccessKeyId=<value>
+export api_production_s3_SecretAccessKey=<value>
+vendor/bin/yami migrate
 ```
-
-Multiple environment variables can be passed in by separating each with a space.
 
 ### Masking Values
 
