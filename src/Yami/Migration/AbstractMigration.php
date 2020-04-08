@@ -76,7 +76,7 @@ abstract class AbstractMigration
     {
         // Save last changes (just in case)
         if ($this->activeNode instanceof Node) {
-            $this->syncNode();
+            $this->syncNode(true);
         }
 
         $this->activeNode = $this->findNode($selector); // don't catch exception
@@ -198,8 +198,12 @@ abstract class AbstractMigration
 
     /**
      * Save the latest node changes to the main tree
+     * 
+     * @param bool is this an interim update (another add) or a final one (save)?
+     * 
+     * @return void
      */
-    private function syncNode(): void
+    private function syncNode(bool $interimUpdate = false): void
     {
         if ($this->activeNode instanceof Node) {
             $keys = preg_match_all('/"[^"]*"|[^.]+/', $this->activeNode->getSelector(), $matches);
@@ -219,12 +223,12 @@ abstract class AbstractMigration
         }
 
         // Remove empty
-        if ($this->config->save->removeEmptyNodes) {
+        if (!$interimUpdate && $this->config->save->removeEmptyNodes) {
             $this->yaml = Utils::removeEmpty($this->yaml);
         }
 
         // Mask values
-        if ($this->config->save->maskValues) {
+        if (!$interimUpdate && $this->config->save->maskValues) {
             $this->yaml = Utils::maskValues($this->yaml);
         }
 

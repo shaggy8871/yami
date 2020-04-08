@@ -138,4 +138,38 @@ class AbstractMigrationTest extends TestCase
         Bootstrap::deleteMockYaml($args);
     }
 
+    public function testAddWithInterimSync(): void
+    {
+        $args = new Args([]);
+
+        // Seed the config
+        Bootstrap::seedConfig([
+            'environments' => [
+                'default' => [
+                    'path' => './tests/migrations',
+                    'yamlFile' => 'default.yaml',
+                ],
+            ]
+        ]);
+        $mockYaml = Bootstrap::createMockYaml($args, "foo: \n  bar: baz");
+
+        $environment = Bootstrap::getEnvironment($args);
+
+        $migration = (object) [
+            'filePath' => './tests/migrations/0000000004_add_with_interim_sync.php',
+            'uniqueId' => '0000000004_add_with_interim_sync'
+        ];
+
+        include_once($migration->filePath);
+
+        $migrationInstance = new \AddWithInterimSync(Migrate::ACTION, $migration, $args);
+
+        $rootNode = $migrationInstance->get('.');
+
+        $this->assertInstanceOf(Node::class, $rootNode);
+        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar:\n    - boo\n    - buzz\n");
+
+        Bootstrap::deleteMockYaml($args);
+    }
+
 }
