@@ -29,6 +29,7 @@ Yami is a PHP migration tool for YAML files. Since YAML files are often not comm
 7. [Securing Data](#securing-data)
     - [Secrets](#secrets)
     - [Masking Values](#masking-values)
+8. [Command Line Options](#command-line-options)
 
 ## Installation:
 
@@ -373,3 +374,20 @@ The original file will be backed up in the same location prior to masking, in ca
 Masked YAML files are safe to commit. Unmasked YAML files should never be committed to a source code repository.
 
 To ensure that changes remain masked even after migrations, use the `maskValues` [configuration option](#configuration-options).
+
+## Command Line Options
+
+| option             | description | default |
+|--------------------|---|---|
+| *general* 
+| -c  --config | Specify the config file | ./config.php |
+| -d  --dry-run | Test the migration or rollback but don't commit | - |
+| -e  --env | Specify the target environment | default |
+| -n  --no-ansi | Disable ansi colour coding in output | colours are enabled |
+| *create* 
+| -m  --migration | The name of the migration | - |
+| *rollback* 
+| -s  --step | The number of steps to roll back | - |
+| -t  --target | The target migration to roll back to | - |
+| *config* 
+| -p  --project | Where to place the config file | current directory |

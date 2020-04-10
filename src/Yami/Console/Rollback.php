@@ -64,12 +64,21 @@ class Rollback extends AbstractConsole
     protected function getMessages(int $batchNo): string
     {
         if ($this->args->step && is_numeric($this->args->step)) {
-            return Decorate::color('Rolling back steps: ', 'white') . Decorate::color(sprintf("%d\n", (int) $this->args->step), 'light_blue');
+            return $this->decorator->format([
+                [sprintf('Rolling back steps: '), 'white'], 
+                [sprintf("%d\n", (int) $this->args->step), 'light_blue']
+            ]);
         } else
         if ($this->args->target) {
-            return Decorate::color('Rolling back to target: ', 'white') . Decorate::color(sprintf("%s\n", $this->args->target), 'light_blue');
+            return $this->decorator->format([
+                [sprintf('Rolling back to target: '), 'white'], 
+                [sprintf("%s\n", $this->args->target), 'light_blue']
+            ]);
         } else {
-            return Decorate::color('Rolling back to batch: ', 'white') . Decorate::color(sprintf("%d\n", $batchNo), 'light_blue');
+            return $this->decorator->format([
+                [sprintf('Rolling back to batch: '), 'white'], 
+                [sprintf("%d\n", $batchNo), 'light_blue']
+            ]);
         }
     }
 

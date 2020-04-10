@@ -11,13 +11,21 @@ use DateTime;
 class Mask implements CommandInterface
 {
 
+    /**
+     * @var Yami\Console\Decorator
+     */
+    protected $decorator;
+
     public function execute(Args $args): void
     {
         $args->setAliases([
             'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
+            'n' => 'no-ansi'
         ]);
+
+        $this->decorator = new Decorator($args);
 
         $config = Bootstrap::getConfig($args);
         $environment = Bootstrap::getEnvironment($args);
@@ -39,7 +47,9 @@ class Mask implements CommandInterface
             $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
             file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
             file_put_contents($yamlFile, $yaml);
-            echo Decorate::color(sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white');
+            $this->decorator->write([
+                [sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white']
+            ]);
         }
 
     }

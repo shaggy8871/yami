@@ -3,6 +3,7 @@
 namespace Yami\Console;
 
 use Yami\Console\Traits\HistoryTrait;
+use Yami\Console\Decorator;
 use Console\{CommandInterface, Args, Decorate};
 use Yami\Config\Bootstrap;
 use Jfcherng\Diff\DiffHelper;
@@ -38,12 +39,18 @@ abstract class AbstractConsole implements CommandInterface
      */
     protected $environment;
 
+    /**
+     * @var Yami\Console\Decorator
+     */
+    protected $decorator;
+
     public function execute(Args $args): void
     {
         $args->setAliases([
             'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
+            'n' => 'no-ansi',
             's' => 'step',
             't' => 'target',
         ]);
@@ -53,6 +60,7 @@ abstract class AbstractConsole implements CommandInterface
         $this->args = $args;
         $this->environment = Bootstrap::getEnvironment($this->args);
         $this->configId = Bootstrap::getConfigId();
+        $this->decorator = new Decorator($this->args);
 
         $this->loadHistory(true);
 
@@ -60,20 +68,33 @@ abstract class AbstractConsole implements CommandInterface
         $isDryRun = array_key_exists('dry-run', $args->getAll()) || array_key_exists('d', $args->getAll());
         $migrations = $this->getMigrations($lastBatchNo);
 
-        echo Decorate::color("Using configuration: ", 'white') . Decorate::color(sprintf("%s\n", $args->config ? $args->config : './config.php'), 'light_blue');
+        $this->decorator->write([
+            [sprintf('Using configuration: '), 'white'], 
+            [sprintf("%s\n", $args->config ? $args->config : './config.php'), 'light_blue']
+        ]);
         if ($this->environment->name != $args->env) {
-            echo Decorate::color(sprintf("Warning, no environment specified; defaulting to '%s'\n", $this->environment->name), 'light_red');
+            $this->decorator->write([
+                [sprintf("Warning, no environment specified; defaulting to '%s'\n", $this->environment->name), 'light_red']
+            ]);
         } else {
-            echo Decorate::color("Using environment: ", 'white') . Decorate::color(sprintf("%s\n", $this->environment->name), 'light_blue');
+            $this->decorator->write([
+                [sprintf('Using environment: '), 'white'], 
+                [sprintf("%s\n", $this->environment->name), 'light_blue']
+            ]);
         }
 
         if (count($migrations)) {
-            echo Decorate::color('Migrations file path: ', 'white') . Decorate::color(sprintf("%s\n", $this->environment->path), 'light_blue');
+            $this->decorator->write([
+                [sprintf('Migrations file path: '), 'white'],
+                [sprintf("%s\n", $this->environment->path), 'light_blue']
+            ]);
             echo $this->getMessages($lastBatchNo);
         }
 
-        echo Decorate::color(sprintf("\n%d migration(s)", count($migrations)), 'green') . 
-             Decorate::color(sprintf(" found\n\n", count($migrations)), 'white');
+        $this->decorator->write([
+            [sprintf("\n%d migration(s)", count($migrations)), 'green'], 
+            [sprintf(" found\n\n", count($migrations)), 'white']
+        ]);
 
         if ($isDryRun) {
             $originalYaml = Bootstrap::createMockYaml($args);
@@ -86,7 +107,9 @@ abstract class AbstractConsole implements CommandInterface
 
             include_once($migration->filePath);
 
-            echo Decorate::color(sprintf(static::ACTION_DESCRIPTION . " %s... ", $migration->uniqueId), 'white');
+            $this->decorator->write([
+                [sprintf(static::ACTION_DESCRIPTION . " %s... ", $migration->uniqueId), 'white']
+            ]);
 
             if (class_exists($migration->className)) {
                 $className = $migration->className;
@@ -94,7 +117,9 @@ abstract class AbstractConsole implements CommandInterface
                     // Instantiate migration
                     $migrationClass = new $className(static::ACTION, $migration, $args);
 
-                    echo Decorate::color("OK!\n", 'green');
+                    $this->decorator->write([
+                        ["OK!\n", 'green']
+                    ]);
 
                     if ($isDryRun) {
                         $differOptions = [
@@ -108,22 +133,26 @@ abstract class AbstractConsole implements CommandInterface
                             'resultForIdenticals' => "> no changes\n",
                         ];
                         $diffCurr = file_get_contents($this->environment->yamlFile);
-                        echo DiffHelper::calculate($diffPrev, $diffCurr, 'ColourUnified', $differOptions, $rendererOptions) . "\n";
+                        echo DiffHelper::calculate($diffPrev, $diffCurr, $this->decorator->isColourEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
                         $diffPrev = $diffCurr;
                     } else {
                         $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
                     }
                 } catch (\Exception $e) {
-                    echo Decorate::color(sprintf("\n>> %s\n\n", $e->getMessage()), 'red');
-                    echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray');
+                    $this->decorator->write([
+                        [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'], 
+                        [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
+                    ]);
                     if ($isDryRun) {
                         Bootstrap::deleteMockYaml($args);
                     }
                     exit(1);
                 }
             } else {
-                echo Decorate::color(sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red');
-                echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray');
+                $this->decorator->write([
+                    [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'], 
+                    [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
+                ]);
                 if ($isDryRun) {
                     Bootstrap::deleteMockYaml($args);
                 }
@@ -136,7 +165,9 @@ abstract class AbstractConsole implements CommandInterface
             Bootstrap::deleteMockYaml($args);
         }
 
-        echo Decorate::color(sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey');
+        $this->decorator->write([
+            [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey']
+        ]);
     }
 
 }

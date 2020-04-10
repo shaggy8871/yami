@@ -66,10 +66,16 @@ class Migrate extends AbstractConsole
     {
         $messages = '';
         if (isset($this->environment->secretsManager) && isset($this->environment->secretsManager->adapter)) {
-            $messages .= Decorate::color('Using secrets manager: ', 'white') . Decorate::color(sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue');
+            $messages .= $this->decorator->format([
+                [sprintf('Using secrets manager: '), 'white'], 
+                [sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue']
+            ]);
         }
 
-        $messages .= Decorate::color('Batch id: ', 'white') . Decorate::color(sprintf("%d\n", $batchNo + 1), 'light_blue');
+        $messages .= $this->decorator->format([
+            [sprintf('Batch id: '), 'white'], 
+            [sprintf("%d\n", $batchNo + 1), 'light_blue']
+        ]);
 
         return $messages;
     }

@@ -4,7 +4,7 @@
 include_once("vendor/autoload.php");
 
 echo "-------------------------\n";
-echo "Yami 0.0.1 by J. Ginsberg\n\n";
+echo "Yami 0.0.1\n\n";
 
 $console = new Console\Runner();
 $console->setAppName('Yami');
@@ -34,13 +34,20 @@ $console->registerAll([
     ],
 ]);
 
+$decorator = new Yami\Console\Decorator(new Console\Args($argv));
+
 // Start your engines...
 try {
     $console->run();
 } catch(Exception $e) {
-    echo Console\Decorate::color($e->getMessage(), 'red bold') . "\n--------\n\n" . $console->getHelp();
+    $decorator->write([
+        [$e->getMessage(), 'red bold']
+    ]) . "\n--------\n\n" . $console->getHelp();
+    exit(1);
 } catch(Throwable $t) {
-    echo Console\Decorate::color($t, 'red bold') . "\n--------\n\n" . $console->getHelp();
+    $decorator->write([
+        [$t, 'red bold']
+    ]) . "\n--------\n\n" . $console->getHelp();
     exit(1);
 }
 
