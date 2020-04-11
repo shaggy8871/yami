@@ -2,7 +2,7 @@
 
 namespace Yami\Console;
 
-use Console\{CommandInterface, Args, Decorate};
+use Console\{CommandInterface, Args, StdOut};
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
 use Yami\Yaml\Adapter;
@@ -10,11 +10,6 @@ use DateTime;
 
 class Mask implements CommandInterface
 {
-
-    /**
-     * @var Yami\Console\Decorator
-     */
-    protected $decorator;
 
     public function execute(Args $args): void
     {
@@ -25,7 +20,9 @@ class Mask implements CommandInterface
             'n' => 'no-ansi'
         ]);
 
-        $this->decorator = new Decorator($args);
+        if (isset($args->{'no-ansi'})) {
+            StdOut::disableAnsi();
+        }
 
         $config = Bootstrap::getConfig($args);
         $environment = Bootstrap::getEnvironment($args);
@@ -47,7 +44,7 @@ class Mask implements CommandInterface
             $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
             file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
             file_put_contents($yamlFile, $yaml);
-            $this->decorator->write([
+            StdOut::write([
                 [sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white']
             ]);
         }

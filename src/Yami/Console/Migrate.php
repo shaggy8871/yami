@@ -2,7 +2,7 @@
 
 namespace Yami\Console;
 
-use Console\{CommandInterface, Args, Decorate};
+use Console\{CommandInterface, Args, StdOut};
 use Yami\Config\Bootstrap;
 use Yami\Migration\AbstractMigration;
 
@@ -65,17 +65,24 @@ class Migrate extends AbstractConsole
     protected function getMessages(int $batchNo): string
     {
         $messages = '';
+
         if (isset($this->environment->secretsManager) && isset($this->environment->secretsManager->adapter)) {
-            $messages .= $this->decorator->format([
+            $messages .= StdOut::format([
                 [sprintf('Using secrets manager: '), 'white'], 
                 [sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue']
             ]);
         }
 
-        $messages .= $this->decorator->format([
+        $messages .= StdOut::format([
             [sprintf('Batch id: '), 'white'], 
             [sprintf("%d\n", $batchNo + 1), 'light_blue']
         ]);
+
+        if (isset($this->args->{'dry-run'})) {
+            $messages .= StdOut::format([
+                [sprintf("\nStarting dry run...\n"), 'yellow'], 
+            ]);
+        }
 
         return $messages;
     }

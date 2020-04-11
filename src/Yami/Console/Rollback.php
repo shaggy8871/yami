@@ -2,7 +2,7 @@
 
 namespace Yami\Console;
 
-use Console\{CommandInterface, Args, Decorate};
+use Console\{CommandInterface, Args, StdOut};
 use Yami\Migration\AbstractMigration;
 
 class Rollback extends AbstractConsole
@@ -63,23 +63,33 @@ class Rollback extends AbstractConsole
      */
     protected function getMessages(int $batchNo): string
     {
+        $messages = '';
+
         if ($this->args->step && is_numeric($this->args->step)) {
-            return $this->decorator->format([
+            $messages .= StdOut::format([
                 [sprintf('Rolling back steps: '), 'white'], 
                 [sprintf("%d\n", (int) $this->args->step), 'light_blue']
             ]);
         } else
         if ($this->args->target) {
-            return $this->decorator->format([
+            $messages .= StdOut::format([
                 [sprintf('Rolling back to target: '), 'white'], 
                 [sprintf("%s\n", $this->args->target), 'light_blue']
             ]);
         } else {
-            return $this->decorator->format([
+            $messages .= StdOut::format([
                 [sprintf('Rolling back to batch: '), 'white'], 
                 [sprintf("%d\n", $batchNo), 'light_blue']
             ]);
         }
+
+        if (isset($this->args->{'dry-run'})) {
+            $messages .= StdOut::format([
+                [sprintf("\nStarting dry run...\n"), 'yellow'], 
+            ]);
+        }
+
+        return $messages;
     }
 
     /**

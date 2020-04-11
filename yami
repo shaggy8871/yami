@@ -13,41 +13,50 @@ $console->setAppVersion('0.0.1');
 // Add one or more commands here
 $console->registerAll([
     'migrate' => [
-        'class' => 'Yami\Console\Migrate',
+        'class' => Yami\Console\Migrate::class,
         'description' => 'Migrate new changes to YAML file'
     ],
     'rollback' => [
-        'class' => 'Yami\Console\Rollback',
+        'class' => Yami\Console\Rollback::class,
         'description' => 'Rollback recent changes to YAML file'
     ],
     'create' => [
-        'class' => 'Yami\Console\Create',
+        'class' => Yami\Console\Create::class,
         'description' => 'Create a migration file'
     ],
     'config' => [
-        'class' => 'Yami\Console\Config',
+        'class' => Yami\Console\Config::class,
         'description' => 'Create a configuration file'
     ],
     'mask' => [
-        'class' => 'Yami\Console\Mask',
+        'class' => Yami\Console\Mask::class,
         'description' => 'Mask the contents of a YAML file'
     ],
 ]);
 
-$decorator = new Yami\Console\Decorator(new Console\Args($argv));
+// Set stdout ansi preferences
+$args = new Console\Args($argv);
+$args->setAliases([
+    'n' => 'no-ansi'
+]);
+if (isset($args->{'no-ansi'})) {
+    Console\StdOut::disableAnsi();
+}
 
 // Start your engines...
 try {
     $console->run();
 } catch(Exception $e) {
-    $decorator->write([
-        [$e->getMessage(), 'red bold']
-    ]) . "\n--------\n\n" . $console->getHelp();
+    Console\StdOut::write([
+        [sprintf("%s\n", $e->getMessage()), 'red bold'],
+        [sprintf("--------\n\n%s", $console->getHelp()), '']
+    ]);
     exit(1);
 } catch(Throwable $t) {
-    $decorator->write([
-        [$t, 'red bold']
-    ]) . "\n--------\n\n" . $console->getHelp();
+    Console\StdOut::write([
+        [sprintf("%s\n", $t), 'red bold'],
+        [sprintf("--------\n\n%s", $console->getHelp()), '']
+    ]);
     exit(1);
 }
 

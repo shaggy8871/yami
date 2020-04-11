@@ -19,7 +19,7 @@
     "require": {
         "php": ">=7.4.0",
         "symfony/yaml": "^5.0",
-        "shaggy8871/console": ">=1.0.5",
+        "shaggy8871/console": ">=1.0.6",
         "jfcherng/php-diff": "v6.6.5"
     },
     "require-dev": {
