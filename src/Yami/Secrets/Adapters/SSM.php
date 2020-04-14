@@ -3,7 +3,7 @@
 namespace Yami\Secrets\Adapters;
 
 use Yami\Secrets\{SecretsManagerInterface, Utils};
-use Aws\Ssm\SsmClient;
+use Aws\Ssm\{SsmClient, Exception\SsmException};
 
 class SSM implements SecretsManagerInterface
 {
@@ -50,10 +50,19 @@ class SSM implements SecretsManagerInterface
             return getenv(Utils::keyToEnv($key));
         }
 
-        $result = $this->client->getParameter([
-            'Name' => $key,
-            'WithDecryption' => true
-        ]);
+        try {
+            $result = $this->client->getParameter([
+                'Name' => $key,
+                'WithDecryption' => true
+            ]);
+        } catch (SsmException $e) {
+            $response = json_decode((string) $e->getResponse()->getBody());
+            if ($response->__type == 'ParameterNotFound') {
+                throw new \Exception(sprintf("Parameter \"%s\" not found in SSM. Also tried looking for environment variable \"%s\".", $key, Utils::keyToEnv($key)));
+            } else {
+                throw new \Exception(sprintf("Error accessing parameter \"%s\" in SSM. Also tried looking for environment variable \"%s\".\n%s", $key, Utils::keyToEnv($key), $e));
+            }
+        }
 
         return $result->get('Parameter')['Value'] ?? '';
     }

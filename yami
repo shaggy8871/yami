@@ -4,7 +4,6 @@
 include_once("vendor/autoload.php");
 
 echo "-------------------------\n";
-echo "Yami 0.0.1\n\n";
 
 $console = new Console\Runner();
 $console->setAppName('Yami');
