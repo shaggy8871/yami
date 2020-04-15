@@ -393,3 +393,4 @@ To ensure that changes remain masked even after migrations, use the `maskValues`
 | -t  --target | The target migration to roll back to | - |
 | *config* 
 | -p  --project | Where to place the config file | current directory |
+| *history* 

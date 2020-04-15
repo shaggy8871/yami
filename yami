@@ -31,6 +31,10 @@ $console->registerAll([
         'class' => Yami\Console\Mask::class,
         'description' => 'Mask the contents of a YAML file'
     ],
+    'history' => [
+        'class' => Yami\Console\History::class,
+        'description' => 'View a history of changes'
+    ],
 ]);
 
 // Set stdout ansi preferences
