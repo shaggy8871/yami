@@ -3,7 +3,6 @@
 namespace Yami\Console\Traits;
 
 use Yami\Config\Bootstrap;
-use DateTime;
 
 trait HistoryTrait
 {
@@ -24,10 +23,11 @@ trait HistoryTrait
      * @param string the migration name
      * @param int the batch id
      * @param int the batch iteration
+     * @param string the starting unix timestamp
      * 
      * @return void
      */
-    protected function addToHistory(string $migration, int $batchNo, int $iteration): void
+    protected function addToHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
     {
         $configId = $this->configId;
         $environmentName = $this->environment->name;
@@ -36,7 +36,7 @@ trait HistoryTrait
             'configId' => $configId,
             'environmentName' => $environmentName,
             'migration' => $migration,
-            'ts' => (new DateTime())->format('U'),
+            'ts' => $startTs,
             'batchId' => $batchNo . '.' . $iteration,
         ];
 
@@ -47,25 +47,22 @@ trait HistoryTrait
     }
 
     /**
-     * Removes a batch or migration and replaces the history.log file altogether
+     * Removes a migration from memory and replaces the history.log file altogether
      * 
-     * @param string the migration id
-     * @param int the batch id
+     * @param string the migration name
      * 
      * @return array
      */
-    protected function removeFromHistory(string $migration = '', string $batchId = ''): void
+    protected function removeFromHistory(string $migration): void
     {
-        $this->loadHistory();
+        unset($this->history[$this->configId . '_' . $this->environment->name . '_' . $migration]);
 
         $history = array_map(function($j) {
             // Encode rows
             return json_encode($j);
-        }, array_filter($this->history, function(\stdClass $j) use ($batchId, $migration) {
-            // Filter rows
-            return ($migration != '' && $migration == $j->migration) || ($batchId != '' && $batchId == $j->batchId) ? false : true;
-        }));
+        }, $this->history);
 
+        // Save to file
         file_put_contents(self::HISTORY_FILENAME, implode("\n", $history) . "\n");
     }
 
@@ -95,15 +92,18 @@ trait HistoryTrait
      * Loads the full or filtered history into memory
      * 
      * @param bool whether to filter the history to the current config and environment
+     * @param array load from array, not file
      * 
      * @return void
      */
-    protected function loadHistory(bool $filtered = false): void
+    protected function loadHistory(bool $filtered = false, ?array $history = null): void
     {
-        if (file_exists(self::HISTORY_FILENAME)) {
-            $history = explode("\n", trim(file_get_contents(self::HISTORY_FILENAME)));
-        } else {
-            $history = [];
+        if (!$history) {
+            if (file_exists(self::HISTORY_FILENAME)) {
+                $history = explode("\n", trim(file_get_contents(self::HISTORY_FILENAME)));
+            } else {
+                $history = [];
+            }
         }
 
         // Decode rows
@@ -118,19 +118,74 @@ trait HistoryTrait
             if ($filtered) {
                 if ($json->configId == $configId && $json->environmentName == $environmentName) {
                     $this->history[$compositeKey] = $json;
-                    list($batchNo, $iteration) = explode('.', $json->batchId);
-                    if ((int) $batchNo > $this->lastBatchNo) {
-                        $this->lastBatchNo = (int) $batchNo;
-                    }
                 }
             } else {
                 $this->history[$compositeKey] = $json;
+            }
+            // Always filter batch number
+            if ($json->configId == $configId && $json->environmentName == $environmentName) {
                 list($batchNo, $iteration) = explode('.', $json->batchId);
                 if ((int) $batchNo > $this->lastBatchNo) {
                     $this->lastBatchNo = (int) $batchNo;
                 }
             }
         }
+    }
+
+    /**
+     * Return the last batch of events run
+     * 
+     * @return array
+     */
+    protected function getLastMigrationBatch(): array
+    {
+        $historyReversed = array_reverse($this->history);
+        $lastTimestamp = current($historyReversed)->ts ?? 0;
+        return array_filter($historyReversed, function(\stdClass $h) use ($lastTimestamp) {
+            return $h->ts == $lastTimestamp;
+        });
+    }
+
+    /**
+     * Return all history events until a specific step is reached
+     * 
+     * @param string the number of steps
+     * 
+     * @return array
+     */
+    protected function getMigrationsToStep(int $steps): array
+    {
+        if ($steps > count($this->history)) {
+            throw new \Exception(sprintf('Unable to roll back %d step(s).', $steps));
+        }
+
+        $i = 0;
+        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($steps, &$i) {
+            $i++;
+            return $i <= $steps;
+        });
+    }
+
+    /**
+     * Return all history events until a specific migration is reached
+     * 
+     * @param string the target migration
+     * 
+     * @return array
+     */
+    protected function getMigrationsToTarget(string $migration): array
+    {
+        if (!isset($this->history[$this->configId . '_' . $this->environment->name . '_' . $migration])) {
+            throw new \Exception(sprintf('Unable to find target "%s".', $migration));
+        }
+
+        $found = false;
+        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($migration, &$found) {
+            if ($h->migration == $migration) {
+                $found = true; return true;
+            }
+            return !$found;
+        });
     }
 
 }

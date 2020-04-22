@@ -6,6 +6,7 @@ use Yami\Console\Traits\HistoryTrait;
 use Console\{CommandInterface, Args, StdOut};
 use Yami\Config\Bootstrap;
 use Jfcherng\Diff\DiffHelper;
+use DateTime;
 
 abstract class AbstractConsole implements CommandInterface
 {
@@ -63,7 +64,7 @@ abstract class AbstractConsole implements CommandInterface
 
         $lastBatchNo = $this->getLastBatchNo();
         $isDryRun = isset($this->args->{'dry-run'});
-        $migrations = $this->getMigrations($lastBatchNo);
+        $migrations = $this->getMigrations();
 
         StdOut::write([
             [sprintf('Using configuration: '), 'white'], 
@@ -99,6 +100,8 @@ abstract class AbstractConsole implements CommandInterface
         }
 
         $iteration = 0;
+        $startTs = (new DateTime())->format('U');
+
         foreach($migrations as $migration) {
             $iteration++;
 
@@ -133,7 +136,7 @@ abstract class AbstractConsole implements CommandInterface
                         echo DiffHelper::calculate($diffPrev, $diffCurr, StdOut::isAnsiEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
                         $diffPrev = $diffCurr;
                     } else {
-                        $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration);
+                        $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration, $startTs);
                     }
                 } catch (\Exception $e) {
                     StdOut::write([

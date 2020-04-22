@@ -14,11 +14,9 @@ class Rollback extends AbstractConsole
     /**
      * Return a list of migrations to run
      * 
-     * @param int the last batch number (only used for rollback)
-     * 
      * @return array
      */
-    protected function getMigrations(int $lastBatchNo): array
+    protected function getMigrations(): array
     {
         if ($this->args->step && is_numeric($this->args->step)) {
             $migrations = $this->getMigrationsToStep((int) $this->args->step);
@@ -26,7 +24,7 @@ class Rollback extends AbstractConsole
         if ($this->args->target) {
             $migrations = $this->getMigrationsToTarget($this->args->target);
         } else {
-            $migrations = $this->getMigrationsFromBatch($lastBatchNo);
+            $migrations = $this->getLastMigrationBatch();
         }
 
         return array_map(function(\stdClass $m) {
@@ -96,63 +94,16 @@ class Rollback extends AbstractConsole
      * Update the history
      * 
      * @param string the migration name
-     * @param int the batch number
-     * @param int the batch iteration
+     * @param int the batch number (unused)
+     * @param int the batch iteration (unused)
+     * @param string the starting unix timestamp (unused)
      * 
      * @return: void
      */
-    protected function updateHistory(string $migration, int $batchNo, int $iteration): void
+    protected function updateHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
     {
-        $this->removeFromHistory($migration, $batchNo . '.' . $iteration);
-    }
-
-    /**
-     * Return all history events that match a particular batch number
-     * 
-     * @param string the batch number
-     * 
-     * @return array
-     */
-    protected function getMigrationsFromBatch(int $batchNo): array
-    {
-        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($batchNo) {
-            list($b, $iteration) = explode('.', $h->batchId);
-            return $b == $batchNo;
-        });
-    }
-
-    /**
-     * Return all history events until a specific step is reached
-     * 
-     * @param string the number of steps
-     * 
-     * @return array
-     */
-    protected function getMigrationsToStep(int $steps): array
-    {
-        $i = 0;
-        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($steps, &$i) {
-            $i++;
-            return $i <= $steps;
-        });
-    }
-
-    /**
-     * Return all history events until a specific migration is reached
-     * 
-     * @param string the target migration
-     * 
-     * @return array
-     */
-    protected function getMigrationsToTarget(string $migration): array
-    {
-        $found = false;
-        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($migration, &$found) {
-            if ($h->migration == $migration) {
-                $found = true; return true;
-            }
-            return !$found;
-        });
+        $this->loadHistory(false);
+        $this->removeFromHistory($migration);
     }
 
 }

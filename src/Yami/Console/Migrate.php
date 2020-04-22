@@ -15,11 +15,9 @@ class Migrate extends AbstractConsole
     /**
      * Return a list of migrations to run
      * 
-     * @param int the last batch number (only used for rollback)
-     * 
      * @return array
      */
-    protected function getMigrations(int $lastBatchNo): array
+    protected function getMigrations(): array
     {
         $path = $this->environment->path . '/';
 
@@ -93,12 +91,13 @@ class Migrate extends AbstractConsole
      * @param string the migration name
      * @param int the batch number
      * @param int the batch iteration
+     * @param string the starting unix timestamp
      * 
      * @return: void
      */
-    protected function updateHistory(string $migration, int $batchNo, int $iteration): void
+    protected function updateHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
     {
-        $this->addToHistory($migration, $batchNo, $iteration);
+        $this->addToHistory($migration, $batchNo, $iteration, $startTs);
     }
 
 }

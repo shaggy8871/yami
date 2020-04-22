@@ -49,16 +49,17 @@ if (isset($args->{'no-ansi'})) {
 // Start your engines...
 try {
     $console->run();
+} catch(Console\Exception\CommandNotFoundException $e) {
+    echo $console->getHelp();
+    exit(1);
 } catch(Exception $e) {
     Console\StdOut::write([
-        [sprintf("%s\n", $e->getMessage()), 'red bold'],
-        [sprintf("--------\n\n%s", $console->getHelp()), '']
+        [sprintf("%s\n\n", $e->getMessage()), 'red bold']
     ]);
     exit(1);
 } catch(Throwable $t) {
     Console\StdOut::write([
-        [sprintf("%s\n", $t), 'red bold'],
-        [sprintf("--------\n\n%s", $console->getHelp()), '']
+        [sprintf("%s\n\n", $t), 'red bold']
     ]);
     exit(1);
 }
