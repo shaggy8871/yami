@@ -55,14 +55,6 @@ trait HistoryTrait
      */
     protected function removeFromHistory(string $migration): void
     {
-        unset($this->history[$this->configId . '_' . $this->environment->name . '_' . $migration]);
-
-        // Backup history
-        $originalHistory = $this->history;
-
-        // Load the full history into memory
-        $this->loadHistory(false);
-
         // Remove the migration
         unset($this->history[$this->configId . '_' . $this->environment->name . '_' . $migration]);
 
@@ -71,9 +63,6 @@ trait HistoryTrait
 
         // Save to file
         file_put_contents(self::HISTORY_FILENAME, implode("\n", $history) . "\n");
-
-        // Revert to original
-        $this->history = $originalHistory;
     }
 
     /**
