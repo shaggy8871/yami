@@ -78,7 +78,7 @@ return [
 
 The configuration file supports one or more environments. An environment requires a minimum of two keys:
 
-- `yamlFile` - the path to the YAML file, relative to root of your Yami install.
+- `yamlFile` - the path to the YAML file, relative to root of your Yami install. Use `php://stdin` to read file from STDIN (output will be sent to STDOUT).
 - `path` - the path to the `migrations` directory, relative to root of your Yami install.
 
 Further configuration options are outlined below.
@@ -202,7 +202,13 @@ To test the migrations without overriding the YAML file, run `vendor/bin/yami mi
 
 To commit and save the migration, run `vendor/bin/yami migrate`.
 
-Caution: If you don't specify an environment using the `--env=<environment>` or `-e <environment>` parameter, the default environment will be used which may not be what is expected.
+Caution: If you don't specify an environment using the `--env=<environment>` or `-e <environment>` parameter, the default environment will be used which may not be what is expected. Default environment name is `-` and it is configured to use STDIN as YAML file and `./migration` as migrations dir.
+
+  **Options:**
+ * `-p <path>` -- override path set in  config
+ * `-h` -- do not update history
+
+> **Notice:** Migration process is transactional. So if any migration failed no changes won't be applied.
 
 ## Rolling Back
 
