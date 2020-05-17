@@ -28,10 +28,10 @@ class Migrate extends AbstractConsole
 
             // Extract version
             preg_match('/[0-9]{4}_[0-9]{2}_[0-9]{2}_[0-9]{6}/', $uniqueId, $matches);
-            if ($matches[0]) {
+            if ($matches && $matches[0]) {
                 $version = $matches[0];
             } else {
-                throw new \Exception("Unable to parse version from migration.");
+                throw new \Exception("Unable to parse version from migration $uniqueId");
             }
 
             $className = preg_replace_callback('/(_[a-z_])/', function($m) {
@@ -60,26 +60,20 @@ class Migrate extends AbstractConsole
      * 
      * @return string
      */
-    protected function getMessages(int $batchNo): string
+    protected function getMessages(int $batchNo): array
     {
-        $messages = '';
+        $messages = [];
 
         if (isset($this->environment->secretsManager) && isset($this->environment->secretsManager->adapter)) {
-            $messages .= StdOut::format([
-                [sprintf('Using secrets manager: '), 'white'], 
-                [sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue']
-            ]);
+            $messages[] = [sprintf('Using secrets manager: '), 'white'];
+            $messages[] = [sprintf("%s\n", $this->environment->secretsManager->adapter), 'light_blue'];
         }
 
-        $messages .= StdOut::format([
-            [sprintf('Batch id: '), 'white'], 
-            [sprintf("%d\n", $batchNo + 1), 'light_blue']
-        ]);
+        $messages[] = [sprintf('Batch id: '), 'white'];
+        $messages[] = [sprintf("%d\n", $batchNo + 1), 'light_blue'];
 
         if (isset($this->args->{'dry-run'})) {
-            $messages .= StdOut::format([
-                [sprintf("\nStarting dry run...\n"), 'yellow'], 
-            ]);
+            $messages[] = [sprintf("\nStarting dry run...\n"), 'yellow'];
         }
 
         return $messages;

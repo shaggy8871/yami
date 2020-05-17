@@ -3,8 +3,6 @@
 
 include_once("vendor/autoload.php");
 
-echo "-------------------------\n";
-
 $console = new Console\Runner();
 $console->setAppName('Yami');
 $console->setAppVersion('0.0.1');
@@ -42,23 +40,25 @@ $args = new Console\Args($argv);
 $args->setAliases([
     'n' => 'no-ansi'
 ]);
-if (isset($args->{'no-ansi'})) {
-    Console\StdOut::disableAnsi();
-}
+
+// disable ANSI automatically if output is not a terminal (i.e. redirected to file)
+// XXX: made a default logic of isAnsiEnabled() ?
+if (isset($args->{'no-ansi'}) || !posix_isatty(STDOUT)) Console\StdOut::disableAnsi();
+if (isset($args->{'no-ansi'}) || !posix_isatty(STDERR)) Console\StdErr::disableAnsi();
 
 // Start your engines...
 try {
     $console->run();
 } catch(Console\Exception\CommandNotFoundException $e) {
-    echo $console->getHelp();
+    Console\StdErr::write([[ $console->getHelp(), 'red' ]]);
     exit(1);
 } catch(Exception $e) {
-    Console\StdOut::write([
+    Console\StdErr::write([
         [sprintf("%s\n\n", $e->getMessage()), 'red bold']
     ]);
     exit(1);
 } catch(Throwable $t) {
-    Console\StdOut::write([
+    Console\StdErr::write([
         [sprintf("%s\n\n", $t), 'red bold']
     ]);
     exit(1);

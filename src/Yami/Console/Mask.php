@@ -17,12 +17,7 @@ class Mask implements CommandInterface
             'c' => 'config',
             'd' => 'dry-run',
             'e' => 'env',
-            'n' => 'no-ansi'
         ]);
-
-        if (isset($args->{'no-ansi'})) {
-            StdOut::disableAnsi();
-        }
 
         $config = Bootstrap::getConfig($args);
         $environment = Bootstrap::getEnvironment($args);
@@ -41,12 +36,16 @@ class Mask implements CommandInterface
         if ($isDryRun) {
             echo $yaml . "\n";
         } else {
-            $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
-            file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
-            file_put_contents($yamlFile, $yaml);
-            StdOut::write([
-                [sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white']
-            ]);
+            if ($yamlFile === 'php://stdin') {
+                file_put_contents('php://stdout', $yaml);
+            } else {
+                $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);                
+                file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
+                file_put_contents($yamlFile, $yaml);
+                MessageStream::write([
+                    [sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white']
+                ]);    
+            }
         }
 
     }

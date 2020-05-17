@@ -39,13 +39,13 @@ abstract class AbstractMigration
      */
     protected $activeNode;
 
-    public function __construct(string $action, \stdClass $migration, Args $args)
+    public function __construct(string $action, array $yaml, \stdClass $migration, Args $args)
     {
         $this->args = $args;
         $this->config = Bootstrap::getConfig($args);
         $this->environment = Bootstrap::getEnvironment($args);
 
-        $this->yaml = Adapter::load($this->config, $this->environment);
+        $this->yaml = $yaml;
 
         switch ($action) {
             case self::ACTION_MIGRATE:
@@ -103,13 +103,13 @@ abstract class AbstractMigration
     }
 
     /**
-     * Write out the YAML file
+     * Return processed YAML
      */
-    public function save(): void
+    public function save(): array
     {
         $this->syncNode();
 
-        Adapter::save($this->yaml, $this->config, $this->environment);
+        return $this->yaml;
     }
 
     /**

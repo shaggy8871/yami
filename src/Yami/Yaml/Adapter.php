@@ -24,10 +24,14 @@ class Adapter
             Yaml::PARSE_EXCEPTION_ON_INVALID_TYPE;
 
         try {
-            $yaml = Yaml::parseFile(
-                $environment->yamlFile, 
-                $loadFlags
-            );
+            if ($environment->yamlFile == 'php://stdin') {
+                $yaml = Yaml::parse(file_get_contents('php://stdin'), $loadFlags);
+            } else {
+                $yaml = Yaml::parseFile(
+                    $environment->yamlFile, 
+                    $loadFlags
+                );
+            }
             // Convert to array
             $yaml = json_decode(json_encode($yaml), true);
         } catch (ParseException $e) {
@@ -37,17 +41,15 @@ class Adapter
         return $yaml;
     }
 
-    /**
-     * Save the YAML file with rules specified by the config
+    /** 
+     * Returns YAML string
      * 
      * @param array the YAML in array format
      * @param stdClass the config object
-     * @param stdClass the environment object
      * 
-     * @return void
-     */
-    public static function save(array $yaml, \stdClass $config, \stdClass $environment): string
-    {
+     * @return string
+    */
+    public static function stringify(array $yaml, \stdClass $config) {
         $saveFlags = 
             ($config->save->asObject ? Yaml::DUMP_OBJECT : 0) + 
             ($config->save->asYamlMap ? Yaml::DUMP_OBJECT_AS_MAP : 0) + 
@@ -64,7 +66,25 @@ class Adapter
             $saveFlags
         );
 
-        file_put_contents($environment->yamlFile, $yaml);
+        return $yaml;
+    }
+
+    /**
+     * Save the YAML file with rules specified by the config
+     * 
+     * @param array the YAML in array format
+     * @param stdClass the config object
+     * @param stdClass the environment object
+     * 
+     * @return void
+     */
+    public static function save(array $yaml, \stdClass $config, \stdClass $environment): string
+    {
+        $yaml = static::stringify($yaml, $config);
+        $saveTo = $environment->yamlFile === "php://stdin"
+            ? "php://stdout"
+            : $environment->saveTo ?? $environment->yamlFile;
+        file_put_contents($saveTo, $yaml);
 
         return $yaml;
     }

@@ -2,7 +2,7 @@
 
 namespace Yami\Console;
 
-use Console\{CommandInterface, Args, StdOut};
+use Console\{CommandInterface, Args };
 
 class Config implements CommandInterface
 {
@@ -16,13 +16,13 @@ class Config implements CommandInterface
         ]);
 
         if (isset($args->{'no-ansi'})) {
-            StdOut::disableAnsi();
+            MessageStream::disableAnsi();
         }
 
         $configFile = $args->project ? './' . preg_replace('/[^\w]/', '_', strtolower($args->project)) . '.php' : './config.php';
 
         if (file_exists($configFile)) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Config file %s already exists.\n\n", $configFile), 'red']
             ]);
             exit(1);
@@ -31,11 +31,11 @@ class Config implements CommandInterface
         file_put_contents($configFile, file_get_contents(__DIR__ . '/templates/config.template'));
 
         if ($args->path) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Created config file %s at path \"%s\".\n\n", $configFile, $args->path), 'white']
             ]);
         } else {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Created config file %s.\n\n", $configFile), 'white']
             ]);
         }

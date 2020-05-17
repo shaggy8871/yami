@@ -2,7 +2,7 @@
 
 namespace Yami\Console;
 
-use Console\{CommandInterface, Args, StdOut};
+use Console\{CommandInterface, Args };
 use Yami\Config\Bootstrap;
 use DateTime;
 
@@ -19,11 +19,11 @@ class Create implements CommandInterface
         ]);
 
         if (isset($args->{'no-ansi'})) {
-            StdOut::disableAnsi();
+            MessageStream::disableAnsi();
         }
 
         if (!$args->migration) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Migration name not supplied. Please use parameter --migration=NameOfMigration or -m NameOfMigration.\n\n"), 'red']
             ]);
             exit(1);
@@ -32,7 +32,7 @@ class Create implements CommandInterface
         $args->migration = preg_replace('/[^A-Za-z0-9]/', '', $args->migration);
 
         if (!preg_match('/^[A-Z]{1,}[A-Za-z0-9]+/', $args->migration)) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Migration name is not valid. Please use CamelCase with letters and numbers only. The first character must be a capital letter.\n\n"), 'red']
             ]);
             exit(1);
@@ -46,7 +46,7 @@ class Create implements CommandInterface
 
         file_put_contents($environment->path . '/' . $filename . '.php', str_replace('{{ClassName}}', $args->migration, file_get_contents(__DIR__ . '/templates/migration.template')));
 
-        StdOut::write([
+        MessageStream::write([
             [sprintf("Created %s\n\n", $environment->path . '/' . $filename . '.php'), 'white']
         ]);
     }

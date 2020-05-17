@@ -3,7 +3,6 @@
 namespace Yami\Config;
 
 use Console\Args;
-use DateTime;
 
 class Bootstrap
 {
@@ -40,6 +39,10 @@ class Bootstrap
             'nullAsTilde'           => false,
         ],
         'environments' => [
+            '-' => [
+                'yamlFile'  => 'php://stdin',
+                'path'      => './migrations'
+            ]
         ],
     ];
 
@@ -103,7 +106,7 @@ class Bootstrap
         $environment = static::validateEnvArgument($config, $args);
 
         $originalYaml = static::$config->environments->$environment->yamlFile;
-        $mockFilename = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.mock.$1', $originalYaml);
+        $mockFilename = tempnam(sys_get_temp_dir(),'yami.mock');
 
         file_put_contents($mockFilename, $yaml ?? trim(file_get_contents($originalYaml)));
 
@@ -138,6 +141,10 @@ class Bootstrap
     {
         $config = static::getConfig($args);
         $environment = static::validateEnvArgument($config, $args);
+
+        if (isset($args->{'path'})) {
+            $config->environments->$environment->path = $args->{'path'};
+        }
 
         $config->environments->$environment->name = $environment;
 

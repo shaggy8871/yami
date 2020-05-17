@@ -3,10 +3,13 @@
 namespace Yami\Console;
 
 use Yami\Console\Traits\HistoryTrait;
-use Console\{CommandInterface, Args, StdOut};
+use Console\{CommandInterface, Args, StdErr, StdOut};
 use Yami\Config\Bootstrap;
+use Yami\Yaml\Adapter;
 use Jfcherng\Diff\DiffHelper;
 use DateTime;
+
+class MessageStream extends StdErr { }
 
 abstract class AbstractConsole implements CommandInterface
 {
@@ -43,11 +46,13 @@ abstract class AbstractConsole implements CommandInterface
     {
         $args->setAliases([
             'c' => 'config',
+            'p' => 'path',
             'd' => 'dry-run',
             'e' => 'env',
             'n' => 'no-ansi',
             's' => 'step',
             't' => 'target',
+            'h' => 'no-history'
         ]);
 
         $startTime = microtime(true);
@@ -57,6 +62,7 @@ abstract class AbstractConsole implements CommandInterface
         $this->configId = Bootstrap::getConfigId();
 
         if (isset($this->args->{'no-ansi'})) {
+            MessageStream::disableAnsi();
             StdOut::disableAnsi();
         }
 
@@ -66,38 +72,39 @@ abstract class AbstractConsole implements CommandInterface
         $isDryRun = isset($this->args->{'dry-run'});
         $migrations = $this->getMigrations();
 
-        StdOut::write([
+        MessageStream::write([
             [sprintf('Using configuration: '), 'white'], 
             [sprintf("%s\n", $this->args->config ? $this->args->config : './config.php'), 'light_blue']
         ]);
         if ($this->environment->name != $this->args->env) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf("Warning, no environment specified; defaulting to '%s'\n", $this->environment->name), 'light_red']
             ]);
         } else {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf('Using environment: '), 'white'], 
                 [sprintf("%s\n", $this->environment->name), 'light_blue']
             ]);
         }
 
         if (count($migrations)) {
-            StdOut::write([
+            MessageStream::write([
                 [sprintf('Migrations file path: '), 'white'],
                 [sprintf("%s\n", $this->environment->path), 'light_blue']
             ]);
-            echo $this->getMessages($lastBatchNo);
+            MessageStream::write($this->getMessages($lastBatchNo));
         }
 
-        StdOut::write([
+        MessageStream::write([
             [sprintf("\n%d migration(s)", count($migrations)), 'green'], 
             [sprintf(" found\n\n", count($migrations)), 'white']
         ]);
 
-        if ($isDryRun) {
-            $originalYaml = Bootstrap::createMockYaml($this->args);
-            $diffPrev = file_get_contents($originalYaml);
-        }
+        $config = Bootstrap::getConfig($this->args);
+        $environment = Bootstrap::getEnvironment($this->args);
+        $yaml = Adapter::load($config,$environment);
+        $diffPrev = Adapter::stringify($yaml, $config);
+        $historyRecords = [];
 
         $iteration = 0;
         $startTs = (new DateTime())->format('U');
@@ -107,17 +114,18 @@ abstract class AbstractConsole implements CommandInterface
 
             include_once($migration->filePath);
 
-            StdOut::write([
-                [sprintf(static::ACTION_DESCRIPTION . " %s... ", $migration->uniqueId), 'white']
+            MessageStream::write([
+                [sprintf(static::ACTION_DESCRIPTION . " %s... \n", $migration->uniqueId), 'white']
             ]);
 
             if (class_exists($migration->className)) {
                 $className = $migration->className;
                 try {
                     // Instantiate migration
-                    $migrationClass = new $className(static::ACTION, $migration, $this->args);
+                    $migrationClass = new $className(static::ACTION, $yaml, $migration, $this->args);
+                    $yaml = $migrationClass->save();
 
-                    StdOut::write([
+                    MessageStream::write([
                         ["OK!\n", 'green']
                     ]);
 
@@ -132,41 +140,40 @@ abstract class AbstractConsole implements CommandInterface
                             'language' => 'eng',
                             'resultForIdenticals' => "> no changes\n",
                         ];
-                        $diffCurr = file_get_contents($this->environment->yamlFile);
-                        echo DiffHelper::calculate($diffPrev, $diffCurr, StdOut::isAnsiEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
+                        $diffCurr = Adapter::stringify($yaml, $config);
+                        echo DiffHelper::calculate($diffPrev, $diffCurr, MessageStream::isAnsiEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
                         $diffPrev = $diffCurr;
                     } else {
-                        $this->updateHistory((string) $migration->uniqueId, $lastBatchNo + 1, $iteration, $startTs);
+                        $historyRecords[] = [ (string) $migration->uniqueId, $lastBatchNo + 1, $iteration, $startTs ];
                     }
                 } catch (\Exception $e) {
-                    StdOut::write([
+                    MessageStream::write([
                         [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'], 
+                        ["Migrations aborted, changes not applied", 'red'],
                         [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                     ]);
-                    if ($isDryRun) {
-                        Bootstrap::deleteMockYaml($this->args);
-                    }
                     exit(1);
                 }
             } else {
-                StdOut::write([
+                MessageStream::write([
                     [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'], 
                     [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                 ]);
-                if ($isDryRun) {
-                    Bootstrap::deleteMockYaml($this->args);
-                }
                 exit(1);
             }
 
         }
 
-        if ($isDryRun) {
-            Bootstrap::deleteMockYaml($this->args);
+        if (!$isDryRun) {
+            Adapter::save($yaml, $config, $environment);
+            if (!isset($this->args->{'no-history'})) {
+                foreach ($historyRecords as $rec)
+                    call_user_func_array([$this,'updateHistory'],$rec);
+            }
         }
 
-        StdOut::write([
-            [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey']
+        MessageStream::write([
+            [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'white']
         ]);
     }
 
