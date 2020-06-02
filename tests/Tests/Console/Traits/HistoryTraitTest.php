@@ -11,11 +11,12 @@ class HistoryTraitTest extends TestCase
 
     use HistoryTrait;
 
-    const HISTORY_FILENAME = './tests/history.log';
+    protected $historyFileName;
 
     public function testLoadFilteredHistory(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -55,6 +56,7 @@ class HistoryTraitTest extends TestCase
     public function testAddToHistory(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -101,12 +103,13 @@ class HistoryTraitTest extends TestCase
         $this->assertEquals($this->getLastBatchNo(), 4);
 
         // Remove history log
-        unlink(self::HISTORY_FILENAME);
+        unlink($this->historyFileName);
     }
 
     public function testRemoveFromHistory(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -135,18 +138,19 @@ class HistoryTraitTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals(explode("\n", trim(file_get_contents(self::HISTORY_FILENAME))), [
+        $this->assertEquals(explode("\n", trim(file_get_contents($this->historyFileName))), [
             '{"configId":"config","environmentName":"default","migration":"2020_03_31_225419_test_class_1","ts":"1586008228","batchId":"1.1"}',
             '{"configId":"config","environmentName":"default","migration":"2020_04_01_121712_test_class_3","ts":"1586008428","batchId":"3.1"}',
         ]);
 
         // Remove history log
-        unlink(self::HISTORY_FILENAME);
+        unlink($this->historyFileName);
     }
 
     public function testMigrationHasRun(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -163,6 +167,7 @@ class HistoryTraitTest extends TestCase
     public function testGetLastMigrationBatch(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -221,12 +226,13 @@ class HistoryTraitTest extends TestCase
         ]);
 
         // Remove history log
-        unlink(self::HISTORY_FILENAME);
+        unlink($this->historyFileName);
     }
 
     public function testGetMigrationsToStep(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];
@@ -268,6 +274,7 @@ class HistoryTraitTest extends TestCase
     public function testGetMigrationsToTarget(): void
     {
         $this->configId = 'config';
+        $this->historyFileName = './tests/history.log';
         $this->environment = (object) [
             'name' => 'default'
         ];

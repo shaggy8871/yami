@@ -19,12 +19,12 @@ trait HistoryTrait
 
     /**
      * Add a migration to the history
-     * 
+     *
      * @param string the migration name
      * @param int the batch id
      * @param int the batch iteration
      * @param string the starting unix timestamp
-     * 
+     *
      * @return void
      */
     protected function addToHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
@@ -43,14 +43,14 @@ trait HistoryTrait
         $this->history[$configId . '_' . $environmentName . '_' . $migration] = $history;
         $this->lastBatchNo = $batchNo;
 
-        file_put_contents(self::HISTORY_FILENAME, json_encode($history) . "\n", FILE_APPEND);
+        file_put_contents($this->historyFileName, json_encode($history) . "\n", FILE_APPEND);
     }
 
     /**
      * Removes a migration from memory and replaces the history.log file altogether
-     * 
+     *
      * @param string the migration name
-     * 
+     *
      * @return array
      */
     protected function removeFromHistory(string $migration): void
@@ -62,14 +62,14 @@ trait HistoryTrait
         $history = array_map(function($j) { return json_encode($j); }, $this->history);
 
         // Save to file
-        file_put_contents(self::HISTORY_FILENAME, implode("\n", $history) . "\n");
+        file_put_contents($this->historyFileName, implode("\n", $history) . "\n");
     }
 
     /**
      * Returns if the migration has run
-     * 
+     *
      * @param string the migration name
-     * 
+     *
      * @return bool
      */
     protected function migrationHasRun(string $migration): bool
@@ -79,7 +79,7 @@ trait HistoryTrait
 
     /**
      * Returns the last batch id
-     * 
+     *
      * @returns int
      */
     protected function getLastBatchNo(): int
@@ -89,17 +89,17 @@ trait HistoryTrait
 
     /**
      * Loads the full or filtered history into memory
-     * 
+     *
      * @param bool whether to filter the history to the current config and environment
      * @param array load from array, not file
-     * 
+     *
      * @return void
      */
     protected function loadHistory(bool $filtered = false, ?array $history = null): void
     {
         if (!$history) {
-            if (file_exists(self::HISTORY_FILENAME)) {
-                $history = explode("\n", trim(file_get_contents(self::HISTORY_FILENAME)));
+            if (file_exists($this->historyFileName)) {
+                $history = explode("\n", trim(file_get_contents($this->historyFileName)));
             } else {
                 $history = [];
             }
@@ -133,7 +133,7 @@ trait HistoryTrait
 
     /**
      * Return the last batch of events run
-     * 
+     *
      * @return array
      */
     protected function getLastMigrationBatch(): array
@@ -147,9 +147,9 @@ trait HistoryTrait
 
     /**
      * Return all history events until a specific step is reached
-     * 
+     *
      * @param string the number of steps
-     * 
+     *
      * @return array
      */
     protected function getMigrationsToStep(int $steps): array
@@ -167,9 +167,9 @@ trait HistoryTrait
 
     /**
      * Return all history events until a specific migration is reached
-     * 
+     *
      * @param string the target migration
-     * 
+     *
      * @return array
      */
     protected function getMigrationsToTarget(string $migration): array
