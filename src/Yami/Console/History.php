@@ -44,10 +44,12 @@ class History implements CommandInterface
             StdOut::disableAnsi();
         }
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         $this->args = $args;
-        $this->environment = Bootstrap::getEnvironment($this->args);
-        $this->configId = Bootstrap::getConfigId();
-        $this->historyFileName = Bootstrap::getConfig($args)->historyFile;
+        $this->environment = $bootstrap->getEnvironment();
+        $this->configId = $bootstrap->getConfigId();
+        $this->historyFileName = $bootstrap->getConfig()->historyFileName;
 
         $this->loadHistory(true);
 

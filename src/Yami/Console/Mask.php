@@ -24,19 +24,21 @@ class Mask implements CommandInterface
             StdOut::disableAnsi();
         }
 
-        $config = Bootstrap::getConfig($args);
-        $environment = Bootstrap::getEnvironment($args);
+        $bootstrap = Bootstrap::getInstance($args);
+
+        $config = $bootstrap->getConfig();
+        $environment = $bootstrap->getEnvironment();
 
         $isDryRun = isset($args->{'dry-run'});
         $yamlFile = $environment->yamlFile;
 
-        Bootstrap::createMockYaml($args);
+        $bootstrap->createMockYaml();
 
         $yaml = Adapter::load($config, $environment);
         $yaml = Utils::maskValues($yaml);
         $yaml = Adapter::save($yaml, $config, $environment);
 
-        Bootstrap::deleteMockYaml($args);
+        $bootstrap->deleteMockYaml();
 
         if ($isDryRun) {
             echo $yaml . "\n";

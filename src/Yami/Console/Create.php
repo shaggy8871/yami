@@ -42,7 +42,7 @@ class Create implements CommandInterface
             return '_' . strtolower($m[0]);
         }, $args->migration);
 
-        $environment = Bootstrap::getEnvironment($args);
+        $environment = Bootstrap::getInstance($args)->getEnvironment($args);
 
         file_put_contents($environment->path . '/' . $filename . '.php', str_replace('{{ClassName}}', $args->migration, file_get_contents(__DIR__ . '/templates/migration.template')));
 

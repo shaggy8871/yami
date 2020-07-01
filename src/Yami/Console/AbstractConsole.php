@@ -20,7 +20,7 @@ abstract class AbstractConsole implements CommandInterface
     const ACTION_DESCRIPTION = '';
 
     /**
-     * Where the history is stored
+     * @var string
      */
     protected $historyFileName;
 
@@ -52,10 +52,12 @@ abstract class AbstractConsole implements CommandInterface
 
         $startTime = microtime(true);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         $this->args = $args;
-        $this->environment = Bootstrap::getEnvironment($this->args);
-        $this->configId = Bootstrap::getConfigId();
-        $this->historyFileName = Bootstrap::getConfig($args)->historyFile;
+        $this->environment = $bootstrap->getEnvironment();
+        $this->configId = $bootstrap->getConfigId();
+        $this->historyFileName = $bootstrap->getConfig()->historyFileName;
 
         if (isset($this->args->{'no-ansi'})) {
             StdOut::disableAnsi();
@@ -100,7 +102,7 @@ abstract class AbstractConsole implements CommandInterface
         ]);
 
         if ($isDryRun) {
-            $originalYaml = Bootstrap::createMockYaml($this->args);
+            $originalYaml = $bootstrap->createMockYaml();
             $diffPrev = file_get_contents($originalYaml);
         }
 
@@ -149,7 +151,7 @@ abstract class AbstractConsole implements CommandInterface
                         [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                     ]);
                     if ($isDryRun) {
-                        Bootstrap::deleteMockYaml($this->args);
+                        $bootstrap->deleteMockYaml();
                     }
                     exit(1);
                 }
@@ -159,7 +161,7 @@ abstract class AbstractConsole implements CommandInterface
                     [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                 ]);
                 if ($isDryRun) {
-                    Bootstrap::deleteMockYaml($this->args);
+                    $bootstrap->deleteMockYaml();
                 }
                 exit(1);
             }
@@ -167,7 +169,7 @@ abstract class AbstractConsole implements CommandInterface
         }
 
         if ($isDryRun) {
-            Bootstrap::deleteMockYaml($this->args);
+            $bootstrap->deleteMockYaml();
         }
 
         StdOut::write([

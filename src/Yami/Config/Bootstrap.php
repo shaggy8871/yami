@@ -11,19 +11,29 @@ class Bootstrap
     const DEFAULT_ENV = 'default';
 
     /**
+     * @var self
+     */
+    protected static $instance = null;
+
+    /**
+     * @var Args
+     */
+    protected $args;
+
+    /**
      * @var array
      */
-    protected static $config;
+    protected $config;
 
     /**
      * @var string
      */
-    protected static $configId;
+    protected $configId;
 
     /**
      * @var array
      */
-    protected static $defaultConfig = [
+    protected $defaultConfig = [
         'load' => [
             'asObject'              => false,
             'asYamlMap'             => false,
@@ -39,23 +49,45 @@ class Bootstrap
             'base64BinaryData'      => false,
             'nullAsTilde'           => false,
         ],
-        'environments' => [
-        ],
-        'historyFile' => './history.log',
+        'environments'              => [],
+        'historyFileName'           => './history.log',
     ];
+
+    /**
+     * Constructor
+     */
+    protected function __construct(Args $args)
+    {
+        $this->args = $args;
+    }
+
+    /**
+     * Returns a singleton instance of the Bootstrap class
+     * 
+     * @param Args the console arguments
+     * 
+     * @return self
+     */
+    public static function getInstance(Args $args): self
+    {
+        if (!(static::$instance instanceof self)) {
+            static::$instance = new self($args);
+        }
+        return static::$instance;
+    }
 
     /**
      * Returns a merged set of configuration settings
      *
-     * @param Args the console arguments
-     *
      * @return stdClass
      */
-    public static function getConfig(Args $args): \stdClass
+    public function getConfig(): \stdClass
     {
-        if (static::$config != null) {
-            return static::$config;
+        if ($this->config != null) {
+            return $this->config;
         }
+
+        $args = $this->args;
 
         if ($args->config && realpath($args->config)) {
             // Normalise config file path
@@ -73,45 +105,44 @@ class Bootstrap
         }
 
         // Save config file id
-        static::setConfigId($configFile);
+        $this->setConfigId($configFile);
 
-        static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
+        $this->config = json_decode(json_encode(Utils::mergeRecursively($this->defaultConfig, $customConfig)));
 
-        $environment = static::validateEnvArgument(static::$config, $args);
+        $environment = $this->validateEnvArgument($this->config);
 
         // Merge in environment specific load, save and historyFile settings
-        if (isset(static::$config->environments->$environment->load) && is_object(static::$config->environments->$environment->load)) {
-            static::$config->load = json_decode(json_encode(array_merge((array) static::$config->load, (array) static::$config->environments->$environment->load)));
+        if (isset($this->config->environments->$environment->load) && is_object($this->config->environments->$environment->load)) {
+            $this->config->load = json_decode(json_encode(array_merge((array) $this->config->load, (array) $this->config->environments->$environment->load)));
         }
-        if (isset(static::$config->environments->$environment->save) && is_object(static::$config->environments->$environment->save)) {
-            static::$config->save = json_decode(json_encode(array_merge((array) static::$config->save, (array) static::$config->environments->$environment->save)));
+        if (isset($this->config->environments->$environment->save) && is_object($this->config->environments->$environment->save)) {
+            $this->config->save = json_decode(json_encode(array_merge((array) $this->config->save, (array) $this->config->environments->$environment->save)));
         }
-        if (isset(static::$config->environments->$environment->historyFile)) {
-            static::$config->historyFile = static::$config->environments->$environment->historyFile;
+        if (isset($this->config->environments->$environment->historyFileName)) {
+            $this->config->historyFileName = $this->config->environments->$environment->historyFileName;
         }
 
-        return static::$config;
+        return $this->config;
     }
 
     /**
      * For verification migrations, we create a copy of the YAML file and operate on that
      *
-     * @param Args the console arguments
      * @param string optional YAML to mock with
      *
      * @return array
      */
-    public static function createMockYaml(Args $args, ?string $yaml = null): string
+    public function createMockYaml(?string $yaml = null): string
     {
-        $config = static::getConfig($args);
-        $environment = static::validateEnvArgument($config, $args);
+        $config = $this->getConfig($this->args);
+        $environment = $this->validateEnvArgument($config, $this->args);
 
-        $originalYaml = static::$config->environments->$environment->yamlFile;
+        $originalYaml = $this->config->environments->$environment->yamlFile;
         $mockFilename = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.mock.$1', $originalYaml);
 
         file_put_contents($mockFilename, $yaml ?? trim(file_get_contents($originalYaml)));
 
-        static::$config->environments->$environment->yamlFile = $mockFilename;
+        $this->config->environments->$environment->yamlFile = $mockFilename;
 
         return $originalYaml;
     }
@@ -119,29 +150,25 @@ class Bootstrap
     /**
      * For verification migrations, delete the mock file
      *
-     * @param Args the console arguments
-     *
      * @return array
      */
-    public static function deleteMockYaml(Args $args): void
+    public function deleteMockYaml(): void
     {
-        $config = static::getConfig($args);
-        $environment = static::validateEnvArgument($config, $args);
+        $config = $this->getConfig();
+        $environment = $this->validateEnvArgument($config);
 
-        unlink(static::$config->environments->$environment->yamlFile);
+        unlink($this->config->environments->$environment->yamlFile);
     }
 
     /**
      * Determines the environment from console arguments
      *
-     * @param Args the console arguments
-     *
      * @return stdClass
      */
-    public static function getEnvironment(Args $args): \stdClass
+    public function getEnvironment(): \stdClass
     {
-        $config = static::getConfig($args);
-        $environment = static::validateEnvArgument($config, $args);
+        $config = $this->getConfig();
+        $environment = $this->validateEnvArgument($config);
 
         $config->environments->$environment->name = $environment;
 
@@ -155,9 +182,9 @@ class Bootstrap
      *
      * @return void
      */
-    public static function setConfigId(string $configFile): void
+    public function setConfigId(string $configFile): void
     {
-        static::$configId = trim(str_replace('_php', '', preg_replace('/[^\w]/', '_', $configFile)), '_');
+        $this->configId = trim(str_replace('_php', '', preg_replace('/[^\w]/', '_', $configFile)), '_');
     }
 
     /**
@@ -165,9 +192,9 @@ class Bootstrap
      *
      * @return string
      */
-    public static function getConfigId(): string
+    public function getConfigId(): string
     {
-        return static::$configId;
+        return $this->configId;
     }
 
     /**
@@ -177,9 +204,9 @@ class Bootstrap
      *
      * @return void
      */
-    public static function seedConfig(array $customConfig): void
+    public function seedConfig(array $customConfig): void
     {
-        static::$config = json_decode(json_encode(Utils::mergeRecursively(static::$defaultConfig, $customConfig)));
+        $this->config = json_decode(json_encode(Utils::mergeRecursively($this->defaultConfig, $customConfig)));
     }
 
     /**
@@ -191,9 +218,9 @@ class Bootstrap
      * @throws Exception
      * @returns string
      */
-    private static function validateEnvArgument(\stdClass $config, Args $args): string
+    private function validateEnvArgument(\stdClass $config): string
     {
-        $environment = $args->env ?? '';
+        $environment = $this->args->env ?? '';
 
         if ($environment != '' && !preg_match('/[a-z0-9_]+/', $environment)) {
             throw new \Exception(sprintf('Environment "%s" is not a valid name. Please use only a-z0-9 and _ characters.', $environment));

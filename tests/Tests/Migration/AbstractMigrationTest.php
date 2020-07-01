@@ -15,8 +15,10 @@ class AbstractMigrationTest extends TestCase
     {
         $args = new Args([]);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         // Seed the config
-        Bootstrap::seedConfig([
+        $bootstrap->seedConfig([
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
@@ -24,7 +26,7 @@ class AbstractMigrationTest extends TestCase
                 ],
             ]
         ]);
-        Bootstrap::createMockYaml($args, "foo: bar");
+        $bootstrap->createMockYaml("foo: bar");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000000_root_node_migration.php',
@@ -42,15 +44,17 @@ class AbstractMigrationTest extends TestCase
             'foo' => 'baz'
         ], '.'));
 
-        Bootstrap::deleteMockYaml($args);
+        $bootstrap->deleteMockYaml();
     }
 
     public function testRemoveEmpty(): void
     {
         $args = new Args([]);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         // Seed the config
-        Bootstrap::seedConfig([
+        $bootstrap->seedConfig([
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
@@ -58,7 +62,7 @@ class AbstractMigrationTest extends TestCase
                 ],
             ]
         ]);
-        Bootstrap::createMockYaml($args, "foo: bar\nbar:\n  baz: boo");
+        $bootstrap->createMockYaml("foo: bar\nbar:\n  baz: boo");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000001_remove_empty.php',
@@ -74,15 +78,17 @@ class AbstractMigrationTest extends TestCase
         $this->assertInstanceOf(Node::class, $rootNode);
         $this->assertEquals($rootNode, new Node(['foo' => 'bar'], '.'));
 
-        Bootstrap::deleteMockYaml($args);
+        $bootstrap->deleteMockYaml();
     }
 
     public function testFindNodeElement(): void
     {
         $args = new Args([]);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         // Seed the config
-        Bootstrap::seedConfig([
+        $bootstrap->seedConfig([
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
@@ -90,7 +96,7 @@ class AbstractMigrationTest extends TestCase
                 ],
             ]
         ]);
-        Bootstrap::createMockYaml($args, "foo: \n  bar:\n    - element1");
+        $bootstrap->createMockYaml("foo: \n  bar:\n    - element1");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000002_find_node_element.php',
@@ -102,14 +108,18 @@ class AbstractMigrationTest extends TestCase
         $migrationInstance = new \FindNodeElement(Migrate::ACTION, $migration, $args);
 
         $this->assertEquals($migrationInstance->get('.foo.bar.[0]'), new Node('element1', '.foo.bar.[0]'));
+
+        $bootstrap->deleteMockYaml();
     }
 
     public function testAddElementToMap(): void
     {
         $args = new Args([]);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         // Seed the config
-        Bootstrap::seedConfig([
+        $bootstrap->seedConfig([
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
@@ -117,9 +127,9 @@ class AbstractMigrationTest extends TestCase
                 ],
             ]
         ]);
-        $mockYaml = Bootstrap::createMockYaml($args, "foo: \n  bar: baz");
+        $mockYaml = $bootstrap->createMockYaml("foo: \n  bar: baz");
 
-        $environment = Bootstrap::getEnvironment($args);
+        $environment = $bootstrap->getEnvironment();
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000003_add_element_to_map.php',
@@ -135,15 +145,17 @@ class AbstractMigrationTest extends TestCase
         $this->assertInstanceOf(Node::class, $rootNode);
         $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar: baz\n  0: element1\n");
 
-        Bootstrap::deleteMockYaml($args);
+        $bootstrap->deleteMockYaml();
     }
 
     public function testAddWithInterimSync(): void
     {
         $args = new Args([]);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         // Seed the config
-        Bootstrap::seedConfig([
+        $bootstrap->seedConfig([
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
@@ -151,9 +163,9 @@ class AbstractMigrationTest extends TestCase
                 ],
             ]
         ]);
-        $mockYaml = Bootstrap::createMockYaml($args, "foo: \n  bar: baz");
+        $mockYaml = $bootstrap->createMockYaml("foo: \n  bar: baz");
 
-        $environment = Bootstrap::getEnvironment($args);
+        $environment = $bootstrap->getEnvironment();
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000004_add_with_interim_sync.php',
@@ -169,7 +181,7 @@ class AbstractMigrationTest extends TestCase
         $this->assertInstanceOf(Node::class, $rootNode);
         $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar:\n    - boo\n    - buzz\n");
 
-        Bootstrap::deleteMockYaml($args);
+        $bootstrap->deleteMockYaml();
     }
 
 }

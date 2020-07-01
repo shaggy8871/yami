@@ -41,9 +41,11 @@ abstract class AbstractMigration
 
     public function __construct(string $action, \stdClass $migration, Args $args)
     {
+        $bootstrap = Bootstrap::getInstance($args);
+
         $this->args = $args;
-        $this->config = Bootstrap::getConfig($args);
-        $this->environment = Bootstrap::getEnvironment($args);
+        $this->config = $bootstrap->getConfig();
+        $this->environment = $bootstrap->getEnvironment();
 
         $this->yaml = Adapter::load($this->config, $this->environment);
 
