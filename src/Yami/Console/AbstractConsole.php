@@ -22,7 +22,7 @@ abstract class AbstractConsole implements CommandInterface
     /**
      * Where the history is stored
      */
-    const HISTORY_FILENAME = './history.log';
+    protected $historyFileName;
 
     /**
      * @var Args
@@ -55,6 +55,7 @@ abstract class AbstractConsole implements CommandInterface
         $this->args = $args;
         $this->environment = Bootstrap::getEnvironment($this->args);
         $this->configId = Bootstrap::getConfigId();
+        $this->historyFileName = Bootstrap::getConfig($args)->historyFile;
 
         if (isset($this->args->{'no-ansi'})) {
             StdOut::disableAnsi();
@@ -67,8 +68,12 @@ abstract class AbstractConsole implements CommandInterface
         $migrations = $this->getMigrations();
 
         StdOut::write([
-            [sprintf('Using configuration: '), 'white'], 
+            [sprintf('Using configuration: '), 'white'],
             [sprintf("%s\n", $this->args->config ? $this->args->config : './config.php'), 'light_blue']
+        ]);
+        StdOut::write([
+            [sprintf('Using history: '), 'white'],
+            [sprintf("%s\n", $this->historyFileName), 'light_blue']
         ]);
         if ($this->environment->name != $this->args->env) {
             StdOut::write([
@@ -76,7 +81,7 @@ abstract class AbstractConsole implements CommandInterface
             ]);
         } else {
             StdOut::write([
-                [sprintf('Using environment: '), 'white'], 
+                [sprintf('Using environment: '), 'white'],
                 [sprintf("%s\n", $this->environment->name), 'light_blue']
             ]);
         }
@@ -90,7 +95,7 @@ abstract class AbstractConsole implements CommandInterface
         }
 
         StdOut::write([
-            [sprintf("\n%d migration(s)", count($migrations)), 'green'], 
+            [sprintf("\n%d migration(s)", count($migrations)), 'green'],
             [sprintf(" found\n\n", count($migrations)), 'white']
         ]);
 
@@ -140,7 +145,7 @@ abstract class AbstractConsole implements CommandInterface
                     }
                 } catch (\Exception $e) {
                     StdOut::write([
-                        [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'], 
+                        [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'],
                         [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                     ]);
                     if ($isDryRun) {
@@ -150,7 +155,7 @@ abstract class AbstractConsole implements CommandInterface
                 }
             } else {
                 StdOut::write([
-                    [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'], 
+                    [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'],
                     [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                 ]);
                 if ($isDryRun) {

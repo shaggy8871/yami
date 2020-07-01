@@ -41,13 +41,14 @@ class Bootstrap
         ],
         'environments' => [
         ],
+        'historyFile' => './history.log',
     ];
 
     /**
      * Returns a merged set of configuration settings
-     * 
+     *
      * @param Args the console arguments
-     * 
+     *
      * @return stdClass
      */
     public static function getConfig(Args $args): \stdClass
@@ -78,12 +79,15 @@ class Bootstrap
 
         $environment = static::validateEnvArgument(static::$config, $args);
 
-        // Merge in environment specific load and save settings
+        // Merge in environment specific load, save and historyFile settings
         if (isset(static::$config->environments->$environment->load) && is_object(static::$config->environments->$environment->load)) {
             static::$config->load = json_decode(json_encode(array_merge((array) static::$config->load, (array) static::$config->environments->$environment->load)));
         }
         if (isset(static::$config->environments->$environment->save) && is_object(static::$config->environments->$environment->save)) {
             static::$config->save = json_decode(json_encode(array_merge((array) static::$config->save, (array) static::$config->environments->$environment->save)));
+        }
+        if (isset(static::$config->environments->$environment->historyFile)) {
+            static::$config->historyFile = static::$config->environments->$environment->historyFile;
         }
 
         return static::$config;
@@ -91,10 +95,10 @@ class Bootstrap
 
     /**
      * For verification migrations, we create a copy of the YAML file and operate on that
-     * 
+     *
      * @param Args the console arguments
      * @param string optional YAML to mock with
-     * 
+     *
      * @return array
      */
     public static function createMockYaml(Args $args, ?string $yaml = null): string
@@ -114,9 +118,9 @@ class Bootstrap
 
     /**
      * For verification migrations, delete the mock file
-     * 
+     *
      * @param Args the console arguments
-     * 
+     *
      * @return array
      */
     public static function deleteMockYaml(Args $args): void
@@ -129,9 +133,9 @@ class Bootstrap
 
     /**
      * Determines the environment from console arguments
-     * 
+     *
      * @param Args the console arguments
-     * 
+     *
      * @return stdClass
      */
     public static function getEnvironment(Args $args): \stdClass
@@ -146,9 +150,9 @@ class Bootstrap
 
     /**
      * Sets the config file identifier which is used for history tracking
-     * 
+     *
      * @param string the config file name and path
-     * 
+     *
      * @return void
      */
     public static function setConfigId(string $configFile): void
@@ -158,7 +162,7 @@ class Bootstrap
 
     /**
      * Gets the config file identifier
-     * 
+     *
      * @return string
      */
     public static function getConfigId(): string
@@ -168,9 +172,9 @@ class Bootstrap
 
     /**
      * For test purposes, seed the config before querying
-     * 
+     *
      * @param array the replacement config
-     * 
+     *
      * @return void
      */
     public static function seedConfig(array $customConfig): void
@@ -180,10 +184,10 @@ class Bootstrap
 
     /**
      * Validate the environment argument against the config
-     * 
+     *
      * @param stdClass the config object
      * @param Args the console argument
-     * 
+     *
      * @throws Exception
      * @returns string
      */
