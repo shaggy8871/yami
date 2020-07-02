@@ -104,6 +104,19 @@ class NodeTest extends TestCase
         $this->assertEquals($node->get(), ['fazboo']);
     }
 
+    public function testRemoveValueOnArray(): void
+    {
+        $node = new Node([
+            'foobar',
+            'barfoo',
+            'fazboo'
+        ], '.');
+
+        $node->remove('barfoo');
+
+        $this->assertEquals($node->get(), ['foobar', 'fazboo']);
+    }
+
     public function testRemoveOnScalar(): void
     {
         $this->expectException(\Exception::class);

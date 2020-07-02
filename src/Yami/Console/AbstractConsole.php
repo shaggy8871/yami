@@ -20,9 +20,9 @@ abstract class AbstractConsole implements CommandInterface
     const ACTION_DESCRIPTION = '';
 
     /**
-     * Where the history is stored
+     * @var string
      */
-    const HISTORY_FILENAME = './history.log';
+    protected $historyFileName;
 
     /**
      * @var Args
@@ -52,9 +52,12 @@ abstract class AbstractConsole implements CommandInterface
 
         $startTime = microtime(true);
 
+        $bootstrap = Bootstrap::getInstance($args);
+
         $this->args = $args;
-        $this->environment = Bootstrap::getEnvironment($this->args);
-        $this->configId = Bootstrap::getConfigId();
+        $this->environment = $bootstrap->getEnvironment();
+        $this->configId = $bootstrap->getConfigId();
+        $this->historyFileName = $bootstrap->getConfig()->historyFileName;
 
         if (isset($this->args->{'no-ansi'})) {
             StdOut::disableAnsi();
@@ -67,8 +70,12 @@ abstract class AbstractConsole implements CommandInterface
         $migrations = $this->getMigrations();
 
         StdOut::write([
-            [sprintf('Using configuration: '), 'white'], 
+            [sprintf('Using configuration: '), 'white'],
             [sprintf("%s\n", $this->args->config ? $this->args->config : './config.php'), 'light_blue']
+        ]);
+        StdOut::write([
+            [sprintf('Using history: '), 'white'],
+            [sprintf("%s\n", $this->historyFileName), 'light_blue']
         ]);
         if ($this->environment->name != $this->args->env) {
             StdOut::write([
@@ -76,7 +83,7 @@ abstract class AbstractConsole implements CommandInterface
             ]);
         } else {
             StdOut::write([
-                [sprintf('Using environment: '), 'white'], 
+                [sprintf('Using environment: '), 'white'],
                 [sprintf("%s\n", $this->environment->name), 'light_blue']
             ]);
         }
@@ -90,12 +97,12 @@ abstract class AbstractConsole implements CommandInterface
         }
 
         StdOut::write([
-            [sprintf("\n%d migration(s)", count($migrations)), 'green'], 
+            [sprintf("\n%d migration(s)", count($migrations)), 'green'],
             [sprintf(" found\n\n", count($migrations)), 'white']
         ]);
 
         if ($isDryRun) {
-            $originalYaml = Bootstrap::createMockYaml($this->args);
+            $originalYaml = $bootstrap->createMockYaml();
             $diffPrev = file_get_contents($originalYaml);
         }
 
@@ -140,21 +147,21 @@ abstract class AbstractConsole implements CommandInterface
                     }
                 } catch (\Exception $e) {
                     StdOut::write([
-                        [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'], 
+                        [sprintf("\n>> %s\n\n", $e->getMessage()), 'red'],
                         [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                     ]);
                     if ($isDryRun) {
-                        Bootstrap::deleteMockYaml($this->args);
+                        $bootstrap->deleteMockYaml();
                     }
                     exit(1);
                 }
             } else {
                 StdOut::write([
-                    [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'], 
+                    [sprintf("\n>> Unable to find class %s!\n\n", $migration->className), 'red'],
                     [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'light_gray']
                 ]);
                 if ($isDryRun) {
-                    Bootstrap::deleteMockYaml($this->args);
+                    $bootstrap->deleteMockYaml();
                 }
                 exit(1);
             }
@@ -162,7 +169,7 @@ abstract class AbstractConsole implements CommandInterface
         }
 
         if ($isDryRun) {
-            Bootstrap::deleteMockYaml($this->args);
+            $bootstrap->deleteMockYaml();
         }
 
         StdOut::write([

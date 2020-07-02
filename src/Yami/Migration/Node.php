@@ -79,23 +79,17 @@ class Node
     {
         if (is_array($key)) {
             foreach($key as $k) {
-                if (isset($this->value[$k])) {
-                    unset($this->value[$k]);
-                } else {
+                if (!$this->removeKeyOrValue($k)) {
                     throw new \Exception(sprintf('Unable to remove key "%s" from node.', $k));
                 }
             }
-            if (count(array_filter(array_keys($this->value), 'is_string')) == 0) {
-                $this->value = array_values($this->value);
-            }
+            $this->removeDuplicates();
             return $this;    
-        } else
-        if (isset($this->value[$key])) {
-            unset($this->value[$key]);
-            if (count(array_filter(array_keys($this->value), 'is_string')) == 0) {
-                $this->value = array_values($this->value);
+        } else {
+            if ($this->removeKeyOrValue($key)) {
+                $this->removeDuplicates();
+                return $this;
             }
-            return $this;    
         }
         throw new \Exception(sprintf('Unable to remove key "%s" from node.', $key));
     }
@@ -109,7 +103,7 @@ class Node
      */
     public function has($key): bool
     {
-        return isset($this->value[$key]);
+        return is_array($this->value) && isset($this->value[$key]);
     }
 
     /**
@@ -168,6 +162,54 @@ class Node
     public function dump(): void
     {
         var_dump($this->value);
+    }
+
+    /**
+     * Removes a key or value, depending on the state of $this->value
+     * 
+     * @param mixed the key to search for
+     * 
+     * @return bool
+     */
+    private function removeKeyOrValue($key): bool
+    {
+        if (!is_array($this->value)) {
+            return false;
+        }
+        $valueHasKeys = count(array_filter(array_keys($this->value), 'is_string')) > 0;
+        if ($valueHasKeys) {
+            if (isset($this->value[$key])) {
+                unset($this->value[$key]);
+                return true;
+            }
+        } else {
+            if (is_numeric($key)) {
+                if (isset($this->value[$key])) {
+                    unset($this->value[$key]);
+                    return true;
+                }
+            } else {
+                $found = array_search($key, $this->value);
+                if ($found !== false) {
+                    array_splice($this->value, $found, 1);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Remove duplicate values from an array with numeric indexes
+     * 
+     * @return void
+     */
+    private function removeDuplicates(): void
+    {
+        if (is_array($this->value) && count(array_filter(array_keys($this->value), 'is_string')) == 0) {
+            $this->value = array_values($this->value);
+        }
     }
 
 }

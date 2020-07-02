@@ -224,7 +224,7 @@ The following configuration options may be added to your config file to customis
 
 | option             | description | default |
 |--------------------|---|---|
-| *load* 
+| *load*
 | - asObject           | See [Yaml::PARSE_OBJECT](https://symfony.com/doc/current/components/yaml.html#object-parsing-and-dumping) | false |
 | - asYamlMap          | See [Yaml::PARSE_OBJECT_FOR_MAP](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-objects-as-maps) | false |
 | *save*
@@ -232,11 +232,12 @@ The following configuration options may be added to your config file to customis
 | - maskValues         | save values as `(masked)` instead of actual value | false |
 | - removeEmptyNodes   | remove all empty nodes | true |
 | - inlineFromLevel    | how many levels to support before outputting values in JSON object notation | 10 |
-| - asObject           | See [Yaml::DUMP_OBJECT](https://symfony.com/doc/current/components/yaml.html#object-parsing-and-dumping) | false | 
-| - asYamlMap          | See [Yaml::DUMP_OBJECT_AS_MAP](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-objects-as-maps) | false | 
-| - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false | 
+| - asObject           | See [Yaml::DUMP_OBJECT](https://symfony.com/doc/current/components/yaml.html#object-parsing-and-dumping) | false |
+| - asYamlMap          | See [Yaml::DUMP_OBJECT_AS_MAP](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-objects-as-maps) | false |
+| - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false |
 | - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
 | - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
+| *historyFile*        | the file where migration history is stored | ./history.org |
 
 You can also add any of these configuration options within specific environments to customise how each environment behaves. For example:
 
@@ -333,13 +334,13 @@ class TestClass extends AbstractMigration
         $node->add([
             'foo' => 'bar',
             'access_key_id' => $this->secret('/api/production/s3/access_key_id', [
-                'required', 
-                'default' => '', 
+                'required',
+                'default' => '',
                 'type' => 'string'
             ]),
             'secret_access_key' => $this->secret('/api/production/s3/secret_access_key', [
-                'required', 
-                'default' => '', 
+                'required',
+                'default' => '',
                 'type' => 'string'
             ])
         ]);
@@ -381,16 +382,15 @@ To ensure that changes remain masked even after migrations, use the `maskValues`
 
 | option             | description | default |
 |--------------------|---|---|
-| *general* 
+| *general*
 | -c  --config | Specify the config file | ./config.php |
 | -d  --dry-run | Test the migration or rollback but don't commit | - |
 | -e  --env | Specify the target environment | default |
 | -n  --no-ansi | Disable ansi colour coding in output | colours are enabled |
-| *create* 
+| *create*
 | -m  --migration | The name of the migration | - |
-| *rollback* 
+| *rollback*
 | -s  --step | The number of steps to roll back | - |
 | -t  --target | The target migration to roll back to | - |
-| *config* 
+| *config*
 | -p  --project | Where to place the config file | current directory |
-| *history* 
