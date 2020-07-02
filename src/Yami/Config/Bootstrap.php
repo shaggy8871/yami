@@ -68,12 +68,37 @@ class Bootstrap
      * 
      * @return self
      */
-    public static function getInstance(Args $args): self
+    public static function getInstance(?Args $args): self
     {
         if (!(static::$instance instanceof self)) {
             static::$instance = new self($args);
         }
+        if ($args) {
+            static::$instance->setArgs($args);
+        }
         return static::$instance;
+    }
+
+    /**
+     * Overwrite the args with a new set
+     * 
+     * @param Args the console arguments
+     * 
+     * @return void
+     */
+    public function setArgs(Args $args): void
+    {
+        $this->args = $args;
+    }
+
+    /**
+     * Clears the config to force it to be reloaded
+     * 
+     * @return void
+     */
+    public function clearConfig(): void
+    {
+        $this->config = null;
     }
 
     /**
@@ -134,8 +159,8 @@ class Bootstrap
      */
     public function createMockYaml(?string $yaml = null): string
     {
-        $config = $this->getConfig($this->args);
-        $environment = $this->validateEnvArgument($config, $this->args);
+        $config = $this->getConfig();
+        $environment = $this->validateEnvArgument($config);
 
         $originalYaml = $this->config->environments->$environment->yamlFile;
         $mockFilename = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.mock.$1', $originalYaml);
@@ -213,7 +238,6 @@ class Bootstrap
      * Validate the environment argument against the config
      *
      * @param stdClass the config object
-     * @param Args the console argument
      *
      * @throws Exception
      * @returns string
