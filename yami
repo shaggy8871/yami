@@ -7,7 +7,7 @@ echo "-------------------------\n";
 
 $console = new Console\Runner();
 $console->setAppName('Yami');
-$console->setAppVersion('0.0.1');
+$console->setAppVersion('0.0.2');
 
 // Add one or more commands here
 $console->registerAll([
