@@ -151,41 +151,6 @@ class Bootstrap
     }
 
     /**
-     * For verification migrations, we create a copy of the YAML file and operate on that
-     *
-     * @param string optional YAML to mock with
-     *
-     * @return array
-     */
-    public function createMockYaml(?string $yaml = null): string
-    {
-        $config = $this->getConfig();
-        $environment = $this->validateEnvArgument($config);
-
-        $originalYaml = $this->config->environments->$environment->yamlFile;
-        $mockFilename = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.mock.$1', $originalYaml);
-
-        file_put_contents($mockFilename, $yaml ?? trim(file_get_contents($originalYaml)));
-
-        $this->config->environments->$environment->yamlFile = $mockFilename;
-
-        return $originalYaml;
-    }
-
-    /**
-     * For verification migrations, delete the mock file
-     *
-     * @return array
-     */
-    public function deleteMockYaml(): void
-    {
-        $config = $this->getConfig();
-        $environment = $this->validateEnvArgument($config);
-
-        unlink($this->config->environments->$environment->yamlFile);
-    }
-
-    /**
      * Determines the environment from console arguments
      *
      * @return stdClass
