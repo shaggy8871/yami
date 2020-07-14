@@ -39,6 +39,10 @@ abstract class AbstractAdapter
 
         $yamlContent = $this->loadYamlContent();
 
+        if (empty($yamlContent)) {
+            throw new \Exception(sprintf('YAML input is empty (adapter returned "").'));
+        }
+
         try {
             $yaml = Yaml::parse(
                 $yamlContent, 
