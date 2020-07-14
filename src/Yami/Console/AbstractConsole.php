@@ -5,7 +5,7 @@ namespace Yami\Console;
 use Console\{CommandInterface, Args, StdOut};
 use Yami\Console\Traits\HistoryTrait;
 use Yami\Config\Bootstrap;
-use Yami\Yaml\AdapterFactory;
+use Yami\Yaml\YamlAdapterFactory;
 use Jfcherng\Diff\DiffHelper;
 use DateTime;
 
@@ -89,11 +89,15 @@ abstract class AbstractConsole implements CommandInterface
                 [sprintf("%s\n", $this->environment->name), 'light_blue']
             ]);
         }
+        StdOut::write([
+            [sprintf('YAML adapter: '), 'white'],
+            [sprintf("%s\n", $this->environment->yaml->adapter ?? 'file'), 'light_blue']
+        ]);
 
         if (count($migrations)) {
             StdOut::write([
                 [sprintf('Migrations file path: '), 'white'],
-                [sprintf("%s\n", $this->environment->path), 'light_blue']
+                [sprintf("%s\n", $this->environment->migrations->path), 'light_blue']
             ]);
             echo $this->getMessages($lastBatchNo);
         }
@@ -103,14 +107,14 @@ abstract class AbstractConsole implements CommandInterface
             [sprintf(" found\n\n", count($migrations)), 'white']
         ]);
 
-        $adapter = AdapterFactory::loadFrom($config, $this->environment);
+        $yamlAdapter = YamlAdapterFactory::loadFrom($config, $this->environment);
 
         $iteration = 0;
         $startTs = (new DateTime())->format('U');
-        $yamlState = $adapter->load();
+        $yamlState = $yamlAdapter->load();
 
         if ($isDryRun) {
-            $diffPrev = $adapter->toString($yamlState);
+            $diffPrev = $yamlAdapter->toString($yamlState);
         }
 
         foreach($migrations as $migration) {
@@ -126,7 +130,7 @@ abstract class AbstractConsole implements CommandInterface
                 $className = $migration->className;
                 try {
                     // Instantiate migration
-                    $migrationClass = new $className($migration, $args, $bootstrap, $adapter);
+                    $migrationClass = new $className($migration, $args, $bootstrap, $yamlAdapter);
                     $migrationClass->setState($yamlState);
                     $migrationClass->run(static::ACTION);
 
@@ -148,7 +152,7 @@ abstract class AbstractConsole implements CommandInterface
                             'language' => 'eng',
                             'resultForIdenticals' => "> no changes\n",
                         ];
-                        $diffCurr = $adapter->toString($yamlState);
+                        $diffCurr = $yamlAdapter->toString($yamlState);
                         echo DiffHelper::calculate($diffPrev, $diffCurr, StdOut::isAnsiEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
                         $diffPrev = $diffCurr;
                     } else {
@@ -173,7 +177,7 @@ abstract class AbstractConsole implements CommandInterface
 
         if (!isset($this->args->{'dry-run'})) {
             // Write changes
-            $adapter->save($yamlState);
+            $yamlAdapter->save($yamlState);
             // Save the revised history
             $this->saveHistory();
         }

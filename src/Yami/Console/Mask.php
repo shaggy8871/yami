@@ -5,7 +5,7 @@ namespace Yami\Console;
 use Console\{CommandInterface, Args, StdOut};
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
-use Yami\Yaml\AdapterFactory;
+use Yami\Yaml\YamlAdapterFactory;
 use DateTime;
 
 class Mask implements CommandInterface
@@ -31,14 +31,14 @@ class Mask implements CommandInterface
 
         $isDryRun = isset($args->{'dry-run'});
 
-        $adapter = AdapterFactory::loadFrom($config, $environment);
-        $yaml = $adapter->load();
+        $yamlAdapter = YamlAdapterFactory::loadFrom($config, $environment);
+        $yaml = $yamlAdapter->load();
         $yaml = Utils::maskValues($yaml);
 
         if ($isDryRun) {
-            echo $adapter->toString($yaml) . PHP_EOL;
+            echo $yamlAdapter->toString($yaml) . PHP_EOL;
         } else {
-            $backupFile = $adapter->save($yaml, true);
+            $backupFile = $yamlAdapter->save($yaml, true);
             if ($backupFile) {
                 StdOut::write([
                     [sprintf("Masked applied. The original has been backed up as %s.\n\n", $backupFile), 'white']

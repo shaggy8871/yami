@@ -5,7 +5,7 @@ namespace Yami\Yaml;
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use stdClass;
 
-abstract class AbstractAdapter
+abstract class AbstractYamlAdapter
 {
 
     /**

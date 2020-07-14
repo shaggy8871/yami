@@ -2,10 +2,10 @@
 
 namespace Yami\Yaml\Adapters;
 
-use Yami\Yaml\{AbstractAdapter, AdapterInterface};
+use Yami\Yaml\{AbstractYamlAdapter, YamlAdapterInterface};
 use DateTime;
 
-class File extends AbstractAdapter implements AdapterInterface
+class File extends AbstractYamlAdapter implements YamlAdapterInterface
 {
 
     /**
@@ -15,7 +15,7 @@ class File extends AbstractAdapter implements AdapterInterface
      */
     public function loadYamlContent(): string
     {
-        return file_get_contents($this->environment->yamlFile);
+        return file_get_contents($this->environment->yaml->file);
     }
 
     /**
@@ -28,14 +28,15 @@ class File extends AbstractAdapter implements AdapterInterface
      */
     public function saveYamlContent(string $yaml, bool $backup = false): ?string
     {
+        $yamlFile = $this->environment->yaml->file;
         if ($backup) {
-            $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $this->environment->yamlFile);
-            file_put_contents($backupFile, trim(file_get_contents($this->environment->yamlFile)));
+            $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
+            file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
         }
 
-        file_put_contents($this->environment->yamlFile, $yaml);
+        file_put_contents($yamlFile, $yaml);
 
-        return $backup ? $backupFile : $this->environment->yamlFile;
+        return $backup ? $backupFile : $yamlFile;
     }
 
 }

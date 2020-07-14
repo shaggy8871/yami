@@ -44,7 +44,7 @@ class Rollback extends AbstractConsole
             }, str_replace($version, '', $m->migration));
 
             return (object) [
-                'filePath'  => $this->environment->path . '/' . $m->migration . '.php',
+                'filePath'  => $this->environment->migrations->path . '/' . $m->migration . '.php',
                 'uniqueId'  => $m->migration,
                 'version'   => $version,
                 'className' => $className,

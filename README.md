@@ -28,6 +28,7 @@ Yami is a PHP migration tool for YAML files. Since YAML files are often not comm
     - [Targets](#targets)
 6. [Configuration Options](#configuration-options)
     - [Custom Config Files](#custom-config-files)
+    - [YAML Adapters](#yaml-adapters)
 7. [Securing Data](#securing-data)
     - [Secrets](#secrets)
     - [Masking Values](#masking-values)
@@ -66,8 +67,13 @@ Create a configuration file by running `vendor/bin/yami config` from your comman
 return [
     'environments' => [
         'default' => [
-            'yamlFile' => 'default.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'default.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
         ],
     ],
     'save' => [
@@ -78,8 +84,9 @@ return [
 
 The configuration file supports one or more environments. An environment requires a minimum of two keys:
 
-- `yamlFile` - the path to the YAML file, relative to root of your Yami install.
-- `path` - the path to the `migrations` directory, relative to root of your Yami install.
+- `yaml.adapter` - the type of adapter to use. See [YAML Adapters](#yaml-adapters) below for further options.
+- `yaml.file` - the path to the YAML file, relative to root of your Yami install.
+- `migrations.path` - the path to the `migrations` directory, relative to root of your Yami install.
 
 Further configuration options are outlined below.
 
@@ -237,7 +244,7 @@ The following configuration options may be added to your config file to customis
 | - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false |
 | - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
 | - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
-| *historyFile*        | the file where migration history is stored | ./history.org |
+| historyFile         | the file where migration history is stored | ./history.log |
 
 You can also add any of these configuration options within specific environments to customise how each environment behaves. For example:
 
@@ -250,8 +257,13 @@ return [
          * The development.yaml file may be committed if it's masked
          */
         'development' => [
-            'yamlFile' => 'development.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'development.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
             'save' => [
                 'maskValues' => true,
                 'indentation' => 4,
@@ -261,8 +273,13 @@ return [
          * The production.yaml file is not masked, so should not be committed
          */
         'production' => [
-            'yamlFile' => 'production.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'production.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
         ]
     ],
     'save' => [
@@ -282,6 +299,18 @@ vendor/bin/yami migrate -c ./projects/api/config.php
 ```
 
 will run migrations using the default environment specified in this configuration file.
+
+### YAML Adapters
+
+By default, Yami will look for your YAML file in the local file system. The adapter `file` requires a corresponding file name pointing to the location of your YAML file on disk.
+
+The following adapters are available natively. You can also configure your own adapter by implementing the `Yami\Yaml\YamlAdapterInterface` interface, and pointing to the fully qualified class name through the `yaml.adapter` parameter.
+
+| adapter            | mandatory parameters | optional parameters |
+|--------------------|---|---|
+| file | - `file` | None |
+| stream | None, the YAML must be passed in via `stdin` and will be output via `stderr`.<br>Example: `yami migrate < in.yaml 2>out.yaml` | None |
+| s3 | - `credentials.region`<br>- `s3.bucket`<br>- `s3.key` | - `credentials.profile`<br>- `credentials.version`<br>- `s3.saveACL` (if not specified, will default to `private`) |
 
 ## Securing Data
 
@@ -303,8 +332,13 @@ To configure a Secrets Manager, add the following in your config file, within th
 return [
     'environments' => [
         'default' => [
-            'yamlFile' => 'default.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'default.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
             'secretsManager' => [
                 'adapter' => 'ssm',
                 'credentials' => [
@@ -319,7 +353,7 @@ return [
 
 Currently only `local` (using environment variables) and `ssm` (using AWS SSM) adapters are supported as native. If no Secrets Manager is specified, it will default to `local`. Using SSM requires the installation of the [AWS SDK for PHP](https://github.com/aws/aws-sdk-php).
 
-If you prefer to write your own Secrets Manager class, it must implement the `Yami\Secrets\SecretsManagerInterface` interface, and the fully qualified class name should be passed in via the `adapter` parameter.
+If you prefer to write your own Secrets Manager class, it must implement the `Yami\Secrets\SecretsManagerInterface` interface, and the fully qualified class name should be passed in via the `secretsManager.adapter` parameter.
 
 ```php
 <?php

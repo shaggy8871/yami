@@ -2,7 +2,7 @@
 
 namespace Yami\Yaml;
 
-Interface AdapterInterface
+Interface YamlAdapterInterface
 {
 
     /**

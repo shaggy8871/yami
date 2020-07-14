@@ -44,10 +44,10 @@ class Create implements CommandInterface
 
         $environment = Bootstrap::getInstance($args)->getEnvironment($args);
 
-        file_put_contents($environment->path . '/' . $filename . '.php', str_replace('{{ClassName}}', $args->migration, file_get_contents(__DIR__ . '/templates/migration.template')));
+        file_put_contents($environment->migrations->path . '/' . $filename . '.php', str_replace('{{ClassName}}', $args->migration, file_get_contents(__DIR__ . '/templates/migration.template')));
 
         StdOut::write([
-            [sprintf("Created %s\n\n", $environment->path . '/' . $filename . '.php'), 'white']
+            [sprintf("Created %s\n\n", $environment->migrations->path . '/' . $filename . '.php'), 'white']
         ]);
     }
 

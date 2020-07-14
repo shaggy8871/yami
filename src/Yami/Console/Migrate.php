@@ -20,7 +20,7 @@ class Migrate extends AbstractConsole
      */
     protected function getMigrations(): array
     {
-        $path = $this->environment->path . '/';
+        $path = $this->environment->migrations->path . '/';
 
         $migrations = [];
 

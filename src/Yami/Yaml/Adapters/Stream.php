@@ -2,9 +2,9 @@
 
 namespace Yami\Yaml\Adapters;
 
-use Yami\Yaml\{AbstractAdapter, AdapterInterface};
+use Yami\Yaml\{AbstractYamlAdapter, YamlAdapterInterface};
 
-class Stream extends AbstractAdapter implements AdapterInterface
+class Stream extends AbstractYamlAdapter implements YamlAdapterInterface
 {
 
     /**

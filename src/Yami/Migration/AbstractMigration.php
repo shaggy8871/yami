@@ -5,7 +5,7 @@ namespace Yami\Migration;
 use Console\Args;
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
-use Yami\Yaml\{AdapterFactory, AdapterInterface};
+use Yami\Yaml\{YamlAdapterFactory, YamlAdapterInterface};
 use Yami\Secrets\{SecretsManagerFactory, Utils as SecretsUtil};
 use stdClass;
 
@@ -36,7 +36,7 @@ abstract class AbstractMigration
     protected $environment;
 
     /**
-     * @var AdapterInterface
+     * @var YamlAdapterInterface
      */
     protected $adapter;
 
@@ -50,7 +50,7 @@ abstract class AbstractMigration
      */
     protected $activeNode;
 
-    public function __construct(stdClass $migration, Args $args, Bootstrap $bootstrap, AdapterInterface $adapter)
+    public function __construct(stdClass $migration, Args $args, Bootstrap $bootstrap, YamlAdapterInterface $adapter)
     {
         $this->migration = $migration;
         $this->args = $args;

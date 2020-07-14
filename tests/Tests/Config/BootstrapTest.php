@@ -19,12 +19,12 @@ class BootstrapTest extends TestCase
 return [
     \'environments\' => [
         \'default\' => [
-            \'yamlFile\' => \'default.yml\',
-            \'path\' => \'./migrations/default\',
+            \'yaml\' => [\'file\' => \'default.yml\'],
+            \'migrations\' => [\'path\' => \'./migrations/default\'],
         ],
         \'production\' => [
-            \'yamlFile\' => \'production.yml\',
-            \'path\' => \'./migrations/production\',
+            \'yaml\' => [\'file\' => \'production.yml\'],
+            \'migrations\' => [\'path\' => \'./migrations/production\'],
             \'historyFileName\' => \'./production.log\',
         ],
     ]
@@ -69,10 +69,10 @@ return [
         $this->assertEquals($config->save->asMultilineLiteral, false);
         $this->assertEquals($config->save->base64BinaryData, false);
         $this->assertEquals($config->save->nullAsTilde, false);
-        $this->assertEquals($config->environments->default->yamlFile, 'default.yml');
-        $this->assertEquals($config->environments->default->path, './migrations/default');
-        $this->assertEquals($config->environments->production->yamlFile, 'production.yml');
-        $this->assertEquals($config->environments->production->path, './migrations/production');
+        $this->assertEquals($config->environments->default->yaml->file, 'default.yml');
+        $this->assertEquals($config->environments->default->migrations->path, './migrations/default');
+        $this->assertEquals($config->environments->production->yaml->file, 'production.yml');
+        $this->assertEquals($config->environments->production->migrations->path, './migrations/production');
         $this->assertEquals($config->environments->production->historyFileName, './production.log');
         $this->assertEquals($config->historyFileName, './history.log');
 
@@ -102,8 +102,8 @@ return [
         $bootstrap = Bootstrap::getInstance($args);
         $environment = $bootstrap->getEnvironment();
 
-        $this->assertEquals($environment->yamlFile, 'default.yml');
-        $this->assertEquals($environment->path, './migrations/default');
+        $this->assertEquals($environment->yaml->file, 'default.yml');
+        $this->assertEquals($environment->migrations->path, './migrations/default');
         $this->assertEquals($environment->name, 'default');
 
         $bootstrap->clearConfig();
@@ -117,8 +117,8 @@ return [
         $bootstrap = Bootstrap::getInstance($args);
         $environment = $bootstrap->getEnvironment();
 
-        $this->assertEquals($environment->yamlFile, 'production.yml');
-        $this->assertEquals($environment->path, './migrations/production');
+        $this->assertEquals($environment->yaml->file, 'production.yml');
+        $this->assertEquals($environment->migrations->path, './migrations/production');
         $this->assertEquals($environment->historyFileName, './production.log');
         $this->assertEquals($environment->name, 'production');
 

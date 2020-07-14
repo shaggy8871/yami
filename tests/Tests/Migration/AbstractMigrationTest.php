@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Yami\Migration\{AbstractMigration, Node};
 use Yami\Console\Migrate;
 use Yami\Config\Bootstrap;
-use Yami\Yaml\AdapterFactory;
+use Yami\Yaml\YamlAdapterFactory;
 use Console\Args;
 
 class AbstractMigrationTest extends TestCase
@@ -23,7 +23,9 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
@@ -36,7 +38,7 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \RootNodeMigration($migration, $args, $bootstrap, AdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance = new \RootNodeMigration($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
 
@@ -61,7 +63,9 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
@@ -74,7 +78,7 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \RemoveEmpty($migration, $args, $bootstrap, AdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance = new \RemoveEmpty($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
 
@@ -97,7 +101,9 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
@@ -110,7 +116,7 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \FindNodeElement($migration, $args, $bootstrap, AdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance = new \FindNodeElement($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
 
@@ -130,14 +136,16 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
         file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
-        $adapter = AdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
+        $yamlAdapter = YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000003_add_element_to_map.php',
@@ -146,16 +154,16 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddElementToMap($migration, $args, $bootstrap, $adapter);
+        $migrationInstance = new \AddElementToMap($migration, $args, $bootstrap, $yamlAdapter);
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
 
-        $adapter->save($migrationInstance->getState());
+        $yamlAdapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar: baz\n  0: element1\n");
+        $this->assertEquals(file_get_contents($environment->yaml->file), "foo:\n  bar: baz\n  0: element1\n");
 
         unlink('./default.yaml');
     }
@@ -171,14 +179,16 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
         file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
-        $adapter = AdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
+        $yamlAdapter = YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000004_add_with_interim_sync.php',
@@ -187,16 +197,16 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddWithInterimSync($migration, $args, $bootstrap, $adapter);
+        $migrationInstance = new \AddWithInterimSync($migration, $args, $bootstrap, $yamlAdapter);
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
 
-        $adapter->save($migrationInstance->getState());
+        $yamlAdapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar:\n    - boo\n    - buzz\n");
+        $this->assertEquals(file_get_contents($environment->yaml->file), "foo:\n  bar:\n    - boo\n    - buzz\n");
 
         unlink('./default.yaml');
     }
