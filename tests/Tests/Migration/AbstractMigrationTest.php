@@ -137,6 +137,7 @@ class AbstractMigrationTest extends TestCase
         file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
+        $adapter = AdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000003_add_element_to_map.php',
@@ -145,9 +146,11 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddElementToMap($migration, $args, $bootstrap, AdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance = new \AddElementToMap($migration, $args, $bootstrap, $adapter);
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
+
+        $adapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 
@@ -175,6 +178,7 @@ class AbstractMigrationTest extends TestCase
         file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
+        $adapter = AdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000004_add_with_interim_sync.php',
@@ -183,9 +187,11 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddWithInterimSync($migration, $args, $bootstrap, AdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance = new \AddWithInterimSync($migration, $args, $bootstrap, $adapter);
         $migrationInstance->setState();
         $migrationInstance->run(Migrate::ACTION);
+
+        $adapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 

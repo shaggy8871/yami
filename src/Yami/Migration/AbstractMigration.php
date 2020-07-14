@@ -144,15 +144,19 @@ abstract class AbstractMigration
     }
 
     /**
-     * Sync, and optionally write out the YAML file
+     * Alias for exists()
+     */
+    public function has(string $selector): bool
+    {
+        return $this->exists($selector);
+    }
+
+    /**
+     * Sync, but don't write
      */
     public function save(): void
     {
         $this->syncNode();
-
-        if (!isset($this->args->{'dry-run'})) {
-            $this->adapter->save($this->yaml);
-        }
     }
 
     /**

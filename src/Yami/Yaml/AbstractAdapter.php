@@ -60,7 +60,7 @@ abstract class AbstractAdapter
      * 
      * @return string
      */
-    public function mock(array $yaml): string
+    public function toString(array $yaml): string
     {
         $saveFlags = 
             ($this->config->save->asObject ? Yaml::DUMP_OBJECT : 0) + 
@@ -85,13 +85,11 @@ abstract class AbstractAdapter
      * @param array the YAML in array format
      * @param bool should a backup be created?
      * 
-     * @return string
+     * @return string|null
      */
-    public function save(array $yaml, bool $backup = false): string
+    public function save(array $yaml, bool $backup = false): ?string
     {
-        $yaml = $this->mock($yaml);
-
-        return $this->saveYamlContent($yaml, $backup);
+        return $this->saveYamlContent($this->toString($yaml), $backup);
     }
 
 }

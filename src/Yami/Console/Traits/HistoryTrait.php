@@ -3,6 +3,7 @@
 namespace Yami\Console\Traits;
 
 use Yami\Config\Bootstrap;
+use Yami\Migration\AbstractMigration;
 
 trait HistoryTrait
 {
@@ -11,6 +12,11 @@ trait HistoryTrait
      * @var array
      */
     protected $history = [];
+
+    /**
+     * @var array
+     */
+    protected $unsavedChanges = [];
 
     /**
      * @var int
@@ -43,7 +49,7 @@ trait HistoryTrait
         $this->history[$configId . '_' . $environmentName . '_' . $migration] = $history;
         $this->lastBatchNo = $batchNo;
 
-        file_put_contents($this->historyFileName, json_encode($history) . "\n", FILE_APPEND);
+        $this->unsavedChanges[] = json_encode($history);
     }
 
     /**
@@ -57,12 +63,6 @@ trait HistoryTrait
     {
         // Remove the migration
         unset($this->history[$this->configId . '_' . $this->environment->name . '_' . $migration]);
-
-        // Encode rows
-        $history = array_map(function($j) { return json_encode($j); }, $this->history);
-
-        // Save to file
-        file_put_contents($this->historyFileName, implode("\n", $history) . "\n");
     }
 
     /**
@@ -138,7 +138,9 @@ trait HistoryTrait
      */
     protected function getLastMigrationBatch(): array
     {
-        $historyReversed = array_reverse($this->history);
+        $historyReversed = array_filter(array_reverse($this->history), function($h) {
+            return $h->environmentName == $this->environment->name;
+        });
         $lastTimestamp = current($historyReversed)->ts ?? 0;
         return array_filter($historyReversed, function(\stdClass $h) use ($lastTimestamp) {
             return $h->ts == $lastTimestamp;
@@ -154,12 +156,16 @@ trait HistoryTrait
      */
     protected function getMigrationsToStep(int $steps): array
     {
-        if ($steps > count($this->history)) {
+        $historyReversed = array_filter(array_reverse($this->history), function($h) {
+            return $h->environmentName == $this->environment->name;
+        });
+
+        if ($steps > count($historyReversed)) {
             throw new \Exception(sprintf('Unable to roll back %d step(s).', $steps));
         }
 
         $i = 0;
-        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($steps, &$i) {
+        return array_filter($historyReversed, function(\stdClass $h) use ($steps, &$i) {
             $i++;
             return $i <= $steps;
         });
@@ -178,8 +184,12 @@ trait HistoryTrait
             throw new \Exception(sprintf('Unable to find target "%s".', $migration));
         }
 
+        $historyReversed = array_filter(array_reverse($this->history), function($h) {
+            return $h->environmentName == $this->environment->name;
+        });
+
         $found = false;
-        return array_filter(array_reverse($this->history), function(\stdClass $h) use ($migration, &$found) {
+        return array_filter($historyReversed, function(\stdClass $h) use ($migration, &$found) {
             if ($h->migration == $migration) {
                 $found = true; return true;
             }

@@ -18,7 +18,7 @@ Interface AdapterInterface
      * @param string the YAML string to save
      * @param bool should a backup be created?
      * 
-     * @return void
+     * @return string|null
      */
     public function saveYamlContent(string $yaml, bool $backup = false): ?string;
 

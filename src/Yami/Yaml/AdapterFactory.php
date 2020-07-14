@@ -19,8 +19,8 @@ class AdapterFactory
         $adapter = $environment->adapter ?? self::DEFAULT_ADAPTER;
 
         switch($adapter) {
-            case 'shell':
-                return new Adapters\Shell($config, $environment);
+            case 'stream':
+                return new Adapters\Stream($config, $environment);
             case 'file':
             default:
                 return new Adapters\File($config, $environment);

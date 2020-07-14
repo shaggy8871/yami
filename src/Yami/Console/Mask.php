@@ -36,7 +36,7 @@ class Mask implements CommandInterface
         $yaml = Utils::maskValues($yaml);
 
         if ($isDryRun) {
-            echo $adapter->mock($yaml) . PHP_EOL;
+            echo $adapter->toString($yaml) . PHP_EOL;
         } else {
             $backupFile = $adapter->save($yaml, true);
             if ($backupFile) {

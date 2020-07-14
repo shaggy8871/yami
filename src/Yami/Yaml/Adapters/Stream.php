@@ -4,8 +4,15 @@ namespace Yami\Yaml\Adapters;
 
 use Yami\Yaml\{AbstractAdapter, AdapterInterface};
 
-class Shell extends AbstractAdapter implements AdapterInterface
+class Stream extends AbstractAdapter implements AdapterInterface
 {
+
+    /**
+     * @var string
+     * 
+     * We save this here because you can only read it once
+     */
+    private $stdin;
 
     /**
      * Load the YAML file from stdin
@@ -14,7 +21,18 @@ class Shell extends AbstractAdapter implements AdapterInterface
      */
     public function loadYamlContent(): string
     {
-        return file_get_contents('php://stdin');
+        if ($this->stdin) {
+            return $this->stdin;
+        }
+
+        $stdin = '';
+        while ($line = fgets(STDIN)) {
+            $stdin .= $line;
+        }
+
+        $this->stdin = trim($stdin);
+
+        return $this->stdin;
     }
 
     /**
@@ -23,11 +41,13 @@ class Shell extends AbstractAdapter implements AdapterInterface
      * @param string the YAML string to save
      * @param bool should a backup be created?
      * 
-     * @return void
+     * @return string|null
      */
     public function saveYamlContent(string $yaml, bool $backup = false): ?string
     {
-        file_put_contents('php://stderr', $yaml);
+        fwrite(STDERR, $yaml);
+
+        return null;
     }
 
 }

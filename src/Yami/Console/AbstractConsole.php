@@ -65,7 +65,7 @@ abstract class AbstractConsole implements CommandInterface
             StdOut::disableAnsi();
         }
 
-        $this->loadHistory(true);
+        $this->loadHistory(static::LOAD_FULL_HISTORY);
 
         $lastBatchNo = $this->getLastBatchNo();
         $isDryRun = isset($this->args->{'dry-run'});
@@ -105,13 +105,13 @@ abstract class AbstractConsole implements CommandInterface
 
         $adapter = AdapterFactory::loadFrom($config, $this->environment);
 
-        if ($isDryRun) {
-            $diffPrev = $adapter->loadYamlContent();
-        }
-
         $iteration = 0;
         $startTs = (new DateTime())->format('U');
-        $yamlState = null;
+        $yamlState = $adapter->load();
+
+        if ($isDryRun) {
+            $diffPrev = $adapter->toString($yamlState);
+        }
 
         foreach($migrations as $migration) {
             $iteration++;
@@ -148,7 +148,7 @@ abstract class AbstractConsole implements CommandInterface
                             'language' => 'eng',
                             'resultForIdenticals' => "> no changes\n",
                         ];
-                        $diffCurr = $adapter->mock($yamlState);
+                        $diffCurr = $adapter->toString($yamlState);
                         echo DiffHelper::calculate($diffPrev, $diffCurr, StdOut::isAnsiEnabled() ? 'ColourUnified' : 'Unified', $differOptions, $rendererOptions) . "\n";
                         $diffPrev = $diffCurr;
                     } else {
@@ -169,6 +169,13 @@ abstract class AbstractConsole implements CommandInterface
                 exit(1);
             }
 
+        }
+
+        if (!isset($this->args->{'dry-run'})) {
+            // Write changes
+            $adapter->save($yamlState);
+            // Save the revised history
+            $this->saveHistory();
         }
 
         StdOut::write([

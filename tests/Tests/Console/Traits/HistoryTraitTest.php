@@ -102,8 +102,9 @@ class HistoryTraitTest extends TestCase
         ]);
         $this->assertEquals($this->getLastBatchNo(), 4);
 
-        // Remove history log
-        unlink($this->historyFileName);
+        $this->assertEquals($this->unsavedChanges, [
+            '{"configId":"config","environmentName":"default","migration":"2020_04_04_141744_test_class_4","ts":"' . $timestamp . '","batchId":"4.1"}',
+        ]);
     }
 
     public function testRemoveFromHistory(): void
@@ -137,14 +138,6 @@ class HistoryTraitTest extends TestCase
                 'batchId' => '3.1'
             ],
         ]);
-
-        $this->assertEquals(explode("\n", trim(file_get_contents($this->historyFileName))), [
-            '{"configId":"config","environmentName":"default","migration":"2020_03_31_225419_test_class_1","ts":"1586008228","batchId":"1.1"}',
-            '{"configId":"config","environmentName":"default","migration":"2020_04_01_121712_test_class_3","ts":"1586008428","batchId":"3.1"}',
-        ]);
-
-        // Remove history log
-        unlink($this->historyFileName);
     }
 
     public function testMigrationHasRun(): void
@@ -224,9 +217,6 @@ class HistoryTraitTest extends TestCase
                 'batchId' => '2.1'
             ]
         ]);
-
-        // Remove history log
-        unlink($this->historyFileName);
     }
 
     public function testGetMigrationsToStep(): void

@@ -10,6 +10,7 @@ class Rollback extends AbstractConsole
 
     const ACTION = AbstractMigration::ACTION_ROLLBACK;
     const ACTION_DESCRIPTION = 'Rolling back';
+    const LOAD_FULL_HISTORY = false;
 
     /**
      * Return a list of migrations to run
@@ -102,8 +103,19 @@ class Rollback extends AbstractConsole
      */
     protected function updateHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
     {
-        $this->loadHistory(false);
         $this->removeFromHistory($migration);
+    }
+
+    /**
+     * Save the history to file
+     * 
+     * @return void
+     */
+    protected function saveHistory(): void
+    {
+        file_put_contents($this->historyFileName, implode("\n", array_map(function($j) {
+            return json_encode($j);
+        }, $this->history)) . "\n");
     }
 
 }
