@@ -144,14 +144,6 @@ abstract class AbstractMigration
     }
 
     /**
-     * Alias for exists()
-     */
-    public function has(string $selector): bool
-    {
-        return $this->exists($selector);
-    }
-
-    /**
      * Sync, but don't write
      */
     public function save(): void
