@@ -60,7 +60,7 @@ class SSM implements SecretsManagerInterface
             if ($response->__type == 'ParameterNotFound') {
                 throw new \Exception(sprintf("Parameter \"%s\" not found in SSM. Also tried looking for environment variable \"%s\".", $key, Utils::keyToEnv($key)));
             } else {
-                throw new \Exception(sprintf("Error accessing parameter \"%s\" in SSM. Also tried looking for environment variable \"%s\".", $key, Utils::keyToEnv($key)));
+                throw new \Exception(sprintf("Error accessing parameter \"%s\" in SSM: %s. Also tried looking for environment variable \"%s\".", $key, $response->__type, Utils::keyToEnv($key)));
             }
         }
 
