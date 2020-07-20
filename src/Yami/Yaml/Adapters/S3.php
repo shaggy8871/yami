@@ -29,13 +29,13 @@ class S3 extends AbstractYamlAdapter implements YamlAdapterInterface
         }
 
         if (!isset($environment->yaml->credentials->region)) {
-            throw new \Exception('Missing S3 credentials in config (region).');
+            throw new \Exception('Missing setting in config (yaml.credentials.region).');
         }
         if (!isset($environment->yaml->s3->bucket)) {
-            throw new \Exception('Missing S3 bucket in config.');
+            throw new \Exception('Missing setting in config (yaml.s3.bucket).');
         }
         if (!isset($environment->yaml->s3->key)) {
-            throw new \Exception('Missing S3 key in config.');
+            throw new \Exception('Missing setting in config (yaml.s3.key).');
         }
 
         parent::__construct($config, $environment);

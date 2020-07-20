@@ -4,9 +4,19 @@ namespace Yami\Yaml\Adapters;
 
 use Yami\Yaml\{AbstractYamlAdapter, YamlAdapterInterface};
 use DateTime;
+use stdClass;
 
 class File extends AbstractYamlAdapter implements YamlAdapterInterface
 {
+
+    public function __construct(stdClass $config, stdClass $environment)
+    {
+        if (!isset($environment->yaml->file)) {
+            throw new \Exception('Missing setting in config (yaml.file).');
+        }
+
+        parent::__construct($config, $environment);
+    }
 
     /**
      * Load the YAML file from disk

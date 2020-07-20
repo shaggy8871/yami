@@ -20,6 +20,10 @@ class Migrate extends AbstractConsole
      */
     protected function getMigrations(): array
     {
+        if (!isset($this->environment->migrations->path)) {
+            throw new \Exception('Missing setting in config (migrations.path).');
+        }
+
         $path = $this->environment->migrations->path . '/';
 
         $migrations = [];
