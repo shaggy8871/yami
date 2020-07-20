@@ -20,7 +20,7 @@ class Local implements SecretsManagerInterface
             return getenv(Utils::keyToEnv($key));
         }
 
-        return '';
+        throw new \Exception(sprintf("Secret \"%s\" not found in environment variable \"%s\".", $key, Utils::keyToEnv($key)));
     }
 
 }

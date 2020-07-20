@@ -4,6 +4,7 @@ namespace Yami\Yaml\Adapters;
 
 use Yami\Yaml\{AbstractYamlAdapter, YamlAdapterInterface};
 use Aws\S3\{S3Client, Exception\S3Exception};
+use Console\StdOut;
 use DateTime;
 use stdClass;
 
@@ -61,6 +62,11 @@ class S3 extends AbstractYamlAdapter implements YamlAdapterInterface
             return $this->body;
         }
 
+        StdOut::write([
+            [sprintf('Loading YAML from S3: '), 'white'],
+            [sprintf("https://%s.s3.amazonaws.com/%s\n\n", $this->environment->yaml->s3->bucket, $this->environment->yaml->s3->key), 'light_blue']
+        ]);
+
         $result = $this->client->getObject([
             'Bucket' => $this->environment->yaml->s3->bucket,
             'Key'    => $this->environment->yaml->s3->key,
@@ -81,15 +87,26 @@ class S3 extends AbstractYamlAdapter implements YamlAdapterInterface
      */
     public function saveYamlContent(string $yaml, bool $backup = false): ?string
     {
-        if ($backup) {
+        if ($backup && $this->body) {
             $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $this->environment->yaml->s3->key);
+
+            StdOut::write([
+                [sprintf("\nCreating backup: "), 'white'],
+                [sprintf("https://%s.s3.amazonaws.com/%s\n", $this->environment->yaml->s3->bucket, $backupFile), 'light_blue']
+            ]);
+    
             $this->client->putObject([
                 'Bucket' => $this->environment->yaml->s3->bucket,
                 'Key'    => $backupFile,
-                'Body'   => $yaml,
+                'Body'   => $this->body,
                 'ACL'    => $this->environment->yaml->s3->saveACL ?? 'private',
             ]);
         }
+
+        StdOut::write([
+            [sprintf("%sSaving YAML to S3: ", $backup ? '' : "\n"), 'white'],
+            [sprintf("https://%s.s3.amazonaws.com/%s\n\n", $this->environment->yaml->s3->bucket, $this->environment->yaml->s3->key), 'light_blue']
+        ]);
 
         $this->client->putObject([
             'Bucket' => $this->environment->yaml->s3->bucket,

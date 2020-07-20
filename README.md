@@ -260,7 +260,8 @@ The following configuration options may be added to your config file to customis
 | - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false |
 | - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
 | - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
-| historyFile         | the file where migration history is stored | ./history.log |
+| - withBackup         | create a backup of the YAML before saving | false |
+| historyFile          | the file where migration history is stored | ./history.log |
 
 You can also add any of these configuration options within specific environments to customise how each environment behaves. For example:
 
@@ -384,13 +385,9 @@ class TestClass extends AbstractMigration
         $node->add([
             'foo' => 'bar',
             'access_key_id' => $this->secret('/api/production/s3/access_key_id', [
-                'required',
-                'default' => '',
                 'type' => 'string'
             ]),
             'secret_access_key' => $this->secret('/api/production/s3/secret_access_key', [
-                'required',
-                'default' => '',
                 'type' => 'string'
             ])
         ]);

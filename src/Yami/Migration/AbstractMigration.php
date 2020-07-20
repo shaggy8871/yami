@@ -169,16 +169,6 @@ abstract class AbstractMigration
             $value = $secretsManager->get($name);
         }
 
-        if (isset($validations['default'])) {
-            if ($value === false) {
-                $value = $validations['default'];
-            }
-        }
-        if (in_array('required', $validations)) {
-            if ($value === false || $value === '') {
-                throw new \Exception(sprintf('Missing required environment variable "%s".', SecretsUtil::keyToEnv($name)));
-            }
-        }
         if (isset($validations['type'])) {
             switch($validations['type']) {
                 case 'integer':

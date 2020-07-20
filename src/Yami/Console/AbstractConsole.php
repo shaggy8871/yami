@@ -104,8 +104,15 @@ abstract class AbstractConsole implements CommandInterface
 
         StdOut::write([
             [sprintf("\n%d migration(s)", count($migrations)), 'green'],
-            [sprintf(" found\n\n", count($migrations)), 'white']
+            [sprintf(" found.\n\n", count($migrations)), 'white']
         ]);
+
+        if (!count($migrations)) {
+            StdOut::write([
+                [sprintf("Completed in %d.2 seconds.\n\n", microtime(true) - $startTime), 'grey']
+            ]);
+            return;
+        }
 
         $yamlAdapter = YamlAdapterFactory::loadFrom($config, $this->environment);
 
@@ -177,7 +184,7 @@ abstract class AbstractConsole implements CommandInterface
 
         if (!isset($this->args->{'dry-run'})) {
             // Write changes
-            $yamlAdapter->save($yamlState);
+            $yamlAdapter->save($yamlState, $this->environment->save->withBackup ?? false);
             // Save the revised history
             $this->saveHistory();
         }
