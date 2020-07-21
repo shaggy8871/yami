@@ -27,12 +27,15 @@ class YamlAdapterFactory
         if (isset(static::$knownAdapters[$yamlAdapter])) {
             $class = static::$knownAdapters[$yamlAdapter];
         } else
-        if (class_exists($yamlAdapter) && ($yamlAdapter instanceof YamlAdapterInterface)) {
+        if (class_exists($yamlAdapter)) {
             $class = $yamlAdapter;
         }
 
         if (isset($class)) {
-            return new $class($config, $environment);
+            $instance = new $class($config, $environment);
+            if ($instance instanceof YamlAdapterInterface) {
+                return $instance;
+            }
         }
 
         throw new \Exception(sprintf('Unable to find or instantiate YAML adapter class %s.', $yamlAdapter));

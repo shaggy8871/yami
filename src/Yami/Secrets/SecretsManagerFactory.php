@@ -17,12 +17,16 @@ class SecretsManagerFactory
         if ($secretsManager && isset($secretsManager->adapter)) {
             if (isset(static::$knownAdapters[$secretsManager->adapter])) {
                 $class = static::$knownAdapters[$secretsManager->adapter];
-                return new $class($secretsManager);
+            } else
+            if (class_exists($secretsManager->adapter)) {
+                $class = $secretsManager->adapter;
             }
 
-            if (class_exists($secretsManager->adapter) && ($secretsManager->adapter instanceof SecretsManagerInterface)) {
-                $class = $secretsManager->adapter;
-                return new $class($secretsManager);
+            if (isset($class)) {
+                $instance = new $class($secretsManager);
+                if ($instance instanceof SecretsManagerInterface) {
+                    return $instance;
+                }
             }
 
             throw new \Exception(sprintf('Unable to find or instantiate secrets manager class %s.', $secretsManager->adapter));
