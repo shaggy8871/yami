@@ -139,7 +139,7 @@ trait HistoryTrait
     protected function getLastMigrationBatch(): array
     {
         $historyReversed = array_filter(array_reverse($this->history), function($h) {
-            return $h->environmentName == $this->environment->name;
+            return $h->configId == $this->configId && $h->environmentName == $this->environment->name;
         });
         $lastTimestamp = current($historyReversed)->ts ?? 0;
         return array_filter($historyReversed, function(\stdClass $h) use ($lastTimestamp) {
@@ -157,7 +157,7 @@ trait HistoryTrait
     protected function getMigrationsToStep(int $steps): array
     {
         $historyReversed = array_filter(array_reverse($this->history), function($h) {
-            return $h->environmentName == $this->environment->name;
+            return $h->configId == $this->configId && $h->environmentName == $this->environment->name;
         });
 
         if ($steps > count($historyReversed)) {
@@ -185,7 +185,7 @@ trait HistoryTrait
         }
 
         $historyReversed = array_filter(array_reverse($this->history), function($h) {
-            return $h->environmentName == $this->environment->name;
+            return $h->configId == $this->configId && $h->environmentName == $this->environment->name;
         });
 
         $found = false;

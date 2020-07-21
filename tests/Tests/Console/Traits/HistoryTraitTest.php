@@ -172,6 +172,7 @@ class HistoryTraitTest extends TestCase
             // the next one is deliberately wrong:
             '{"configId":"config","environmentName":"default","migration":"2020_04_04_141744_test_class_4","ts":"1586008528","batchId":"3.1"}',
             '{"configId":"config","environmentName":"default-ignore","migration":"2020_04_06_104613_test_class_5","ts":"1586008628","batchId":"5.1"}',
+            '{"configId":"config-ignore","environmentName":"default","migration":"2020_04_07_071429_test_class_6","ts":"1586008728","batchId":"1.1"}',
         ]);
 
         $this->assertEquals($this->getLastMigrationBatch(), [
@@ -234,6 +235,7 @@ class HistoryTraitTest extends TestCase
             // the next one is deliberately wrong:
             '{"configId":"config","environmentName":"default","migration":"2020_04_04_141744_test_class_4","ts":"1586008528","batchId":"3.1"}',
             '{"configId":"config","environmentName":"default-ignore","migration":"2020_04_06_104613_test_class_5","ts":"1586008628","batchId":"5.1"}',
+            '{"configId":"config-ignore","environmentName":"default","migration":"2020_04_07_071429_test_class_6","ts":"1586008728","batchId":"1.1"}',
         ]);
 
         $this->assertEquals($this->getMigrationsToStep(3), [
@@ -276,6 +278,7 @@ class HistoryTraitTest extends TestCase
             // the next one is deliberately wrong:
             '{"configId":"config","environmentName":"default","migration":"2020_04_04_141744_test_class_4","ts":"1586008528","batchId":"3.1"}',
             '{"configId":"config","environmentName":"default-ignore","migration":"2020_04_06_104613_test_class_5","ts":"1586008628","batchId":"5.1"}',
+            '{"configId":"config-ignore","environmentName":"default","migration":"2020_04_07_071429_test_class_6","ts":"1586008728","batchId":"1.1"}',
         ]);
 
         $this->assertEquals($this->getMigrationsToTarget('2020_04_01_121712_test_class_3_1'), [
