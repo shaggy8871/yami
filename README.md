@@ -14,20 +14,25 @@ Yami is a PHP migration tool for YAML files. Since YAML files are often not comm
 1. [Installation](#installation)
 2. [Getting Started](#getting-started)
 3. [Creating Migrations](#creating-migrations)
-    - [get()](#get)
-    - [add()](#add)
-    - [set()](#set)
-    - [remove()](#remove)
-    - [has()](#has)
-    - [containsArray()](#containsArray)
-    - [containsType()](#containsType)
-    - [dump()](#dump)
+    - [Migration Methods](#migration-methods)
+        - [get()](#this-get)
+        - [exists()](#this-exists)
+        - [save()](#this-save)
+    - [Node Methods](#node-methods)
+        - [add()](#node-add)
+        - [set()](#node-set)
+        - [remove()](#node-remove)
+        - [has()](#node-has)
+        - [containsArray()](#node-containsArray)
+        - [containsType()](#node-containsType)
+        - [dump()](#node-dump)
 4. [Running Migrations](#running-migrations)
 5. [Rolling Back](#rolling-back)
     - [Steps](#steps)
     - [Targets](#targets)
 6. [Configuration Options](#configuration-options)
     - [Custom Config Files](#custom-config-files)
+    - [YAML Adapters](#yaml-adapters)
 7. [Securing Data](#securing-data)
     - [Secrets](#secrets)
     - [Masking Values](#masking-values)
@@ -66,8 +71,13 @@ Create a configuration file by running `vendor/bin/yami config` from your comman
 return [
     'environments' => [
         'default' => [
-            'yamlFile' => 'default.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'default.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
         ],
     ],
     'save' => [
@@ -78,8 +88,9 @@ return [
 
 The configuration file supports one or more environments. An environment requires a minimum of two keys:
 
-- `yamlFile` - the path to the YAML file, relative to root of your Yami install.
-- `path` - the path to the `migrations` directory, relative to root of your Yami install.
+- `yaml.adapter` - the type of adapter to use. See [YAML Adapters](#yaml-adapters) below for further options.
+- `yaml.file` - the path to the YAML file, relative to root of your Yami install.
+- `migrations.path` - the path to the `migrations` directory, relative to root of your Yami install.
 
 Further configuration options are outlined below.
 
@@ -135,7 +146,9 @@ Each migration follows a simple set of steps:
 
 Once you have completed your manipulation of the node, call `$this->save()` to save your changes back to the file. If the `--dry-run` flag is set, changes will be output to the screen, but no changes will be written to the file.
 
-### get()
+## Migration methods
+
+### *$this->get()*
 
 The `$this->get()` method expects a search string that follows primitive `jq`-style formatting. The most basic search is `.` which represents the root of the YAML file. Calling `$this->get('.')` will allow you to manipulate the entire YAML file. This search should only be used when adding a node to the bottom of the YAML file.
 
@@ -152,7 +165,17 @@ To search for specific elements within an array, add the array index in `[]` bra
 
 Once you have a node, you can perform one or more operations on it.
 
-### add()
+### *$this->exists()*
+
+Use `$this->exists()` to test whether a node exists in the tree, before attempting to perform operations on it. This function accepts the same parameters as `$this->get()`. If you attempt to perform node operations on a non-existent tree element, it will fail.
+
+### *$this->save()*
+
+Once you've made all the changes to the node you require, call `$this->save()` to save your changes back to the tree. If any step in a migration fails, no changes will be written.
+
+## Node methods
+
+### *$node->add()*
 
 The `add()` method allows you to add to an existing node, or the root of the YAML file. You cannot `add()` if you try to append a value to a scalar value. So using the example YAML above, this will work:
 
@@ -172,27 +195,27 @@ This is because `foo` > `bar` contains a scalar string value of `baz` that canno
 
 The `add()` method supports adding of either a scalar value, or an array of key/value pairs. If a scalar value is supplied, it will be added as an array element. If a key/value pair is added, it will be added as a map element.
 
-### set()
+### *$node->set()*
 
 The `set()` method allows you to overwrite the entire contents of the node. Be careful with this as it could remove entire trees from within a node. The `set()` method should not be used on the root `.` node as it will replace the entire YAML file with whatever value is specified.
 
-### remove()
+### *$node->remove()*
 
-The `remove()` method will remove one or more maps or elements from the node. You can pass a single key as a string, for example `$this->remove('bar')` or an array of keys to remove multiple sub-nodes, for instance `$this->remove(['bar', 'baz'])`.
+The `remove()` method will remove one or more maps or elements from the node. You can pass a single key as a string, for example `$this->remove('bar')` or an array of keys to remove multiple sub-nodes, for instance `$this->remove(['bar', 'baz'])`. Calling `remove()` on a node with array values will remove the specified values from the array by name.
 
-### has()
+### *$node->has()*
 
 Returns true if the node contains a sub-node with the name specified. For example `$this->has('foo')`.
 
-### containsArray()
+### *$node->containsArray()*
 
 Identical to `has()` but also checks if the sub-node is an array. Use as `$this->containsArray('foo')`.
 
-### containsType()
+### *$node->containsType()*
 
 Identical to `has()` but also validates the type of scalar content. Usage is `$this->containsType('foo', 'string')`. Valid types includes `integer`, `string`, `float` and `boolean`.
 
-### dump()
+### *$node->dump()*
 
 Dumps the node's contents to `stdout`.
 
@@ -237,7 +260,8 @@ The following configuration options may be added to your config file to customis
 | - asMultilineLiteral | See [Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK](https://symfony.com/doc/current/components/yaml.html#dumping-multi-line-literal-blocks) | false |
 | - base64BinaryData   | See [Yaml::DUMP_BASE64_BINARY_DATA](https://symfony.com/doc/current/components/yaml.html#parsing-and-dumping-of-binary-data) | false |
 | - nullAsTilde        | See [Yaml::DUMP_NULL_AS_TILDE](https://symfony.com/doc/current/components/yaml.html#dumping-null-values) | false |
-| *historyFile*        | the file where migration history is stored | ./history.org |
+| - withBackup         | create a backup of the YAML before saving | false |
+| historyFile          | the file where migration history is stored | ./history.log |
 
 You can also add any of these configuration options within specific environments to customise how each environment behaves. For example:
 
@@ -250,8 +274,13 @@ return [
          * The development.yaml file may be committed if it's masked
          */
         'development' => [
-            'yamlFile' => 'development.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'development.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
             'save' => [
                 'maskValues' => true,
                 'indentation' => 4,
@@ -261,8 +290,13 @@ return [
          * The production.yaml file is not masked, so should not be committed
          */
         'production' => [
-            'yamlFile' => 'production.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'production.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
         ]
     ],
     'save' => [
@@ -282,6 +316,18 @@ vendor/bin/yami migrate -c ./projects/api/config.php
 ```
 
 will run migrations using the default environment specified in this configuration file.
+
+### YAML Adapters
+
+By default, Yami will look for your YAML file in the local file system. The adapter `file` requires a corresponding file name pointing to the location of your YAML file on disk.
+
+The following adapters are available natively. You can also configure your own adapter by implementing the `Yami\Yaml\YamlAdapterInterface` interface, and pointing to the fully qualified class name through the `yaml.adapter` parameter.
+
+| adapter            | mandatory parameters | optional parameters |
+|--------------------|---|---|
+| file | - `file` | None |
+| stream | None, the YAML must be passed in via `stdin` and will be output via `stderr`.<br>Example: `yami migrate < in.yaml 2>out.yaml` | None |
+| s3 | - `credentials.region`<br>- `s3.bucket`<br>- `s3.key` | - `credentials.profile`<br>- `credentials.version`<br>- `s3.saveACL` (if not specified, will default to `private`) |
 
 ## Securing Data
 
@@ -303,8 +349,13 @@ To configure a Secrets Manager, add the following in your config file, within th
 return [
     'environments' => [
         'default' => [
-            'yamlFile' => 'default.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'default.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
             'secretsManager' => [
                 'adapter' => 'ssm',
                 'credentials' => [
@@ -319,7 +370,7 @@ return [
 
 Currently only `local` (using environment variables) and `ssm` (using AWS SSM) adapters are supported as native. If no Secrets Manager is specified, it will default to `local`. Using SSM requires the installation of the [AWS SDK for PHP](https://github.com/aws/aws-sdk-php).
 
-If you prefer to write your own Secrets Manager class, it must implement the `Yami\Secrets\SecretsManagerInterface` interface, and the fully qualified class name should be passed in via the `adapter` parameter.
+If you prefer to write your own Secrets Manager class, it must implement the `Yami\Secrets\SecretsManagerInterface` interface, and the fully qualified class name should be passed in via the `secretsManager.adapter` parameter.
 
 ```php
 <?php
@@ -334,13 +385,9 @@ class TestClass extends AbstractMigration
         $node->add([
             'foo' => 'bar',
             'access_key_id' => $this->secret('/api/production/s3/access_key_id', [
-                'required',
-                'default' => '',
                 'type' => 'string'
             ]),
             'secret_access_key' => $this->secret('/api/production/s3/secret_access_key', [
-                'required',
-                'default' => '',
                 'type' => 'string'
             ])
         ]);

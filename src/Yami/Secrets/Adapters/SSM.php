@@ -58,9 +58,9 @@ class SSM implements SecretsManagerInterface
         } catch (SsmException $e) {
             $response = json_decode((string) $e->getResponse()->getBody());
             if ($response->__type == 'ParameterNotFound') {
-                throw new \Exception(sprintf("Parameter \"%s\" not found in SSM. Also tried looking for environment variable \"%s\".", $key, Utils::keyToEnv($key)));
+                throw new \Exception(sprintf("Secret \"%s\" not found in SSM, or environment variable \"%s\".", $key, Utils::keyToEnv($key)));
             } else {
-                throw new \Exception(sprintf("Error accessing parameter \"%s\" in SSM. Also tried looking for environment variable \"%s\".\n%s", $key, Utils::keyToEnv($key), $e));
+                throw new \Exception(sprintf("Error accessing secret \"%s\" in SSM, or environment variable \"%s\".\n\nError code: %s", $key, Utils::keyToEnv($key), $response->__type));
             }
         }
 

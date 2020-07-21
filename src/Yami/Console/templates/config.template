@@ -3,8 +3,13 @@
 return [
     'environments' => [
         'default' => [
-            'yamlFile' => 'default.yaml',
-            'path' => './migrations',
+            'yaml' => [
+                'adapter' => 'file',
+                'file' => 'default.yaml',
+            ],
+            'migrations' => [
+                'path' => './migrations',
+            ],
         ],
     ],
     'save' => [

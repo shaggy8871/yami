@@ -11,6 +11,7 @@ class Migrate extends AbstractConsole
 
     const ACTION = AbstractMigration::ACTION_MIGRATE;
     const ACTION_DESCRIPTION = 'Migrating';
+    const LOAD_FULL_HISTORY = false;
 
     /**
      * Return a list of migrations to run
@@ -19,7 +20,11 @@ class Migrate extends AbstractConsole
      */
     protected function getMigrations(): array
     {
-        $path = $this->environment->path . '/';
+        if (!isset($this->environment->migrations->path)) {
+            throw new \Exception('Missing setting in config (migrations.path).');
+        }
+
+        $path = $this->environment->migrations->path . '/';
 
         $migrations = [];
 
@@ -98,6 +103,20 @@ class Migrate extends AbstractConsole
     protected function updateHistory(string $migration, int $batchNo, int $iteration, string $startTs): void
     {
         $this->addToHistory($migration, $batchNo, $iteration, $startTs);
+    }
+
+    /**
+     * Save the history to file
+     * 
+     * @return void
+     */
+    protected function saveHistory(): void
+    {
+        foreach($this->unsavedChanges as $history) {
+            file_put_contents($this->historyFileName, $history . "\n", FILE_APPEND);
+        }
+
+        $this->unsavedChanges = [];
     }
 
 }

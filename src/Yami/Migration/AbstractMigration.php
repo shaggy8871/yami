@@ -2,11 +2,12 @@
 
 namespace Yami\Migration;
 
+use Console\Args;
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
-use Yami\Yaml\Adapter;
+use Yami\Yaml\{YamlAdapterFactory, YamlAdapterInterface};
 use Yami\Secrets\{SecretsManagerFactory, Utils as SecretsUtil};
-use Console\Args;
+use stdClass;
 
 abstract class AbstractMigration
 {
@@ -15,12 +16,17 @@ abstract class AbstractMigration
     const ACTION_ROLLBACK = 'rollback';
 
     /**
+     * @var stdClass
+     */
+    protected $migration;
+
+    /**
      * @var Args
      */
     protected $args;
 
     /**
-     * @var \stdClass
+     * @var stdClass
      */
     protected $config;
 
@@ -28,6 +34,11 @@ abstract class AbstractMigration
      * @var array
      */
     protected $environment;
+
+    /**
+     * @var YamlAdapterInterface
+     */
+    protected $adapter;
 
     /**
      * @var array
@@ -39,32 +50,60 @@ abstract class AbstractMigration
      */
     protected $activeNode;
 
-    public function __construct(string $action, \stdClass $migration, Args $args)
+    public function __construct(stdClass $migration, Args $args, Bootstrap $bootstrap, YamlAdapterInterface $adapter)
     {
-        $bootstrap = Bootstrap::getInstance($args);
-
+        $this->migration = $migration;
         $this->args = $args;
         $this->config = $bootstrap->getConfig();
         $this->environment = $bootstrap->getEnvironment();
+        $this->adapter = $adapter;
+    }
 
-        $this->yaml = Adapter::load($this->config, $this->environment);
-
+    /**
+     * Run the migration or rollback
+     * 
+     * @param string the action to run
+     */
+    public function run(string $action): void
+    {
         switch ($action) {
             case self::ACTION_MIGRATE:
                 if (method_exists($this, 'up')) {
                     $this->up();
                 } else {
-                    throw new \Exception(sprintf('Unable to find up() method in migration %s', $migration->uniqueId));
+                    throw new \Exception(sprintf('Unable to find up() method in migration %s', $this->migration->uniqueId));
                 }
                 break;
             case self::ACTION_ROLLBACK:
                 if (method_exists($this, 'down')) {
                     $this->down();
                 } else {
-                    throw new \Exception(sprintf('Unable to find down() method in migration %s', $migration->uniqueId));
+                    throw new \Exception(sprintf('Unable to find down() method in migration %s', $this->migration->uniqueId));
                 }
                 break;
         }
+    }
+
+    /**
+     * Set the current state of the YAML or loads it
+     * 
+     * @param array|null The YAML array
+     * 
+     * @return void
+     */
+    public function setState(?array $yaml = null): void
+    {
+        $this->yaml = $yaml ?? $this->adapter->load();
+    }
+
+    /**
+     * Gets the current state of the YAML array
+     * 
+     * @return array
+     */
+    public function getState(): array
+    {
+        return $this->yaml;
     }
 
     /**
@@ -105,13 +144,11 @@ abstract class AbstractMigration
     }
 
     /**
-     * Write out the YAML file
+     * Sync, but don't write
      */
     public function save(): void
     {
         $this->syncNode();
-
-        Adapter::save($this->yaml, $this->config, $this->environment);
     }
 
     /**
@@ -132,16 +169,6 @@ abstract class AbstractMigration
             $value = $secretsManager->get($name);
         }
 
-        if (isset($validations['default'])) {
-            if ($value === false) {
-                $value = $validations['default'];
-            }
-        }
-        if (in_array('required', $validations)) {
-            if ($value === false || $value === '') {
-                throw new \Exception(sprintf('Missing required environment variable "%s".', SecretsUtil::keyToEnv($name)));
-            }
-        }
         if (isset($validations['type'])) {
             switch($validations['type']) {
                 case 'integer':

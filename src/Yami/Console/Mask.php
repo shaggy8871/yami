@@ -5,7 +5,7 @@ namespace Yami\Console;
 use Console\{CommandInterface, Args, StdOut};
 use Symfony\Component\Yaml\{Yaml, Exception\ParseException};
 use Yami\Config\{Bootstrap, Utils};
-use Yami\Yaml\Adapter;
+use Yami\Yaml\YamlAdapterFactory;
 use DateTime;
 
 class Mask implements CommandInterface
@@ -30,25 +30,24 @@ class Mask implements CommandInterface
         $environment = $bootstrap->getEnvironment();
 
         $isDryRun = isset($args->{'dry-run'});
-        $yamlFile = $environment->yamlFile;
 
-        $bootstrap->createMockYaml();
-
-        $yaml = Adapter::load($config, $environment);
+        $yamlAdapter = YamlAdapterFactory::loadFrom($config, $environment);
+        $yaml = $yamlAdapter->load();
         $yaml = Utils::maskValues($yaml);
-        $yaml = Adapter::save($yaml, $config, $environment);
-
-        $bootstrap->deleteMockYaml();
 
         if ($isDryRun) {
-            echo $yaml . "\n";
+            echo $yamlAdapter->toString($yaml) . PHP_EOL;
         } else {
-            $backupFile = preg_replace('/.(yml|yaml)/', '_' . (new DateTime())->format('YmdHis') . '.$1', $yamlFile);
-            file_put_contents($backupFile, trim(file_get_contents($yamlFile)));
-            file_put_contents($yamlFile, $yaml);
-            StdOut::write([
-                [sprintf("Masked %s. The original has been backed up as %s.\n\n", $yamlFile, $backupFile), 'white']
-            ]);
+            $backupFile = $yamlAdapter->save($yaml, true);
+            if ($backupFile) {
+                StdOut::write([
+                    [sprintf("Masked applied. The original has been backed up as %s.\n\n", $backupFile), 'white']
+                ]);
+            } else {
+                StdOut::write([
+                    [sprintf("Masked applied.\n\n"), 'white']
+                ]);
+            }
         }
 
     }

@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Yami\Migration\{AbstractMigration, Node};
 use Yami\Console\Migrate;
 use Yami\Config\Bootstrap;
+use Yami\Yaml\YamlAdapterFactory;
 use Console\Args;
 
 class AbstractMigrationTest extends TestCase
@@ -22,11 +23,13 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
-        $bootstrap->createMockYaml("foo: bar");
+        file_put_contents('./default.yaml', "foo: bar");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000000_root_node_migration.php',
@@ -35,7 +38,9 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \RootNodeMigration(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \RootNodeMigration($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance->setState();
+        $migrationInstance->run(Migrate::ACTION);
 
         $rootNode = $migrationInstance->get('.');
 
@@ -44,7 +49,7 @@ class AbstractMigrationTest extends TestCase
             'foo' => 'baz'
         ], '.'));
 
-        $bootstrap->deleteMockYaml();
+        unlink('./default.yaml');
     }
 
     public function testRemoveEmpty(): void
@@ -58,11 +63,13 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
-        $bootstrap->createMockYaml("foo: bar\nbar:\n  baz: boo");
+        file_put_contents('./default.yaml', "foo: bar\nbar:\n  baz: boo");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000001_remove_empty.php',
@@ -71,14 +78,16 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \RemoveEmpty(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \RemoveEmpty($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance->setState();
+        $migrationInstance->run(Migrate::ACTION);
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
         $this->assertEquals($rootNode, new Node(['foo' => 'bar'], '.'));
 
-        $bootstrap->deleteMockYaml();
+        unlink('./default.yaml');
     }
 
     public function testFindNodeElement(): void
@@ -92,11 +101,13 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
-        $bootstrap->createMockYaml("foo: \n  bar:\n    - element1");
+        file_put_contents('./default.yaml', "foo: \n  bar:\n    - element1");
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000002_find_node_element.php',
@@ -105,11 +116,13 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \FindNodeElement(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \FindNodeElement($migration, $args, $bootstrap, YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $bootstrap->getEnvironment()));
+        $migrationInstance->setState();
+        $migrationInstance->run(Migrate::ACTION);
 
         $this->assertEquals($migrationInstance->get('.foo.bar.[0]'), new Node('element1', '.foo.bar.[0]'));
 
-        $bootstrap->deleteMockYaml();
+        unlink('./default.yaml');
     }
 
     public function testAddElementToMap(): void
@@ -123,13 +136,16 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
-        $mockYaml = $bootstrap->createMockYaml("foo: \n  bar: baz");
+        file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
+        $yamlAdapter = YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000003_add_element_to_map.php',
@@ -138,14 +154,18 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddElementToMap(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \AddElementToMap($migration, $args, $bootstrap, $yamlAdapter);
+        $migrationInstance->setState();
+        $migrationInstance->run(Migrate::ACTION);
+
+        $yamlAdapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar: baz\n  0: element1\n");
+        $this->assertEquals(file_get_contents($environment->yaml->file), "foo:\n  bar: baz\n  0: element1\n");
 
-        $bootstrap->deleteMockYaml();
+        unlink('./default.yaml');
     }
 
     public function testAddWithInterimSync(): void
@@ -159,13 +179,16 @@ class AbstractMigrationTest extends TestCase
             'environments' => [
                 'default' => [
                     'path' => './tests/migrations',
-                    'yamlFile' => 'default.yaml',
+                    'yaml' => [
+                        'file' => 'default.yaml',
+                    ],
                 ],
             ]
         ]);
-        $mockYaml = $bootstrap->createMockYaml("foo: \n  bar: baz");
+        file_put_contents('./default.yaml', "foo: \n  bar: baz");
 
         $environment = $bootstrap->getEnvironment();
+        $yamlAdapter = YamlAdapterFactory::loadFrom($bootstrap->getConfig(), $environment);
 
         $migration = (object) [
             'filePath' => './tests/migrations/0000000004_add_with_interim_sync.php',
@@ -174,14 +197,18 @@ class AbstractMigrationTest extends TestCase
 
         include_once($migration->filePath);
 
-        $migrationInstance = new \AddWithInterimSync(Migrate::ACTION, $migration, $args);
+        $migrationInstance = new \AddWithInterimSync($migration, $args, $bootstrap, $yamlAdapter);
+        $migrationInstance->setState();
+        $migrationInstance->run(Migrate::ACTION);
+
+        $yamlAdapter->save($migrationInstance->getState());
 
         $rootNode = $migrationInstance->get('.');
 
         $this->assertInstanceOf(Node::class, $rootNode);
-        $this->assertEquals(file_get_contents($environment->yamlFile), "foo:\n  bar:\n    - boo\n    - buzz\n");
+        $this->assertEquals(file_get_contents($environment->yaml->file), "foo:\n  bar:\n    - boo\n    - buzz\n");
 
-        $bootstrap->deleteMockYaml();
+        unlink('./default.yaml');
     }
 
 }
