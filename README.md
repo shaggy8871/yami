@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/shaggy8871/yami.svg?branch=master)](https://travis-ci.org/shaggy8871/yami)
 
-Yami is a PHP migration tool for YAML files. Since YAML files are often not committed to source code repositories, Yami makes it easy to maintain credentials and configuration files without exposing sensitive data. Some of its key benefits are:
+Yami is a PHP migration tool for YAML files. It is ideal for systems that maintain YAML files outside of source code repositories, such as when used for credentials or secrets management (`.env` files). Some key benefits include:
 
 - It maintains a history of changes to one or more YAML files, and the ability to roll back in batches or to a particular point in time.
 - It focuses on the structure of the YAML file rather than the data, and allows the data to be injected from multiple sources including a Secrets Manager or environment variables during migration.
