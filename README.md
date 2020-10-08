@@ -173,6 +173,8 @@ Use `$this->exists()` to test whether a node exists in the tree, before attempti
 
 Once you've made all the changes to the node you require, call `$this->save()` to save your changes back to the tree. If any step in a migration fails, no changes will be written.
 
+> There's no need to call `$this->save()` if you plan to manipulate another node. Simple call `$this->get()` and the previous node will be saved back to the tree automatically.
+
 ## Node methods
 
 ### *$node->add()*
@@ -201,19 +203,19 @@ The `set()` method allows you to overwrite the entire contents of the node. Be c
 
 ### *$node->remove()*
 
-The `remove()` method will remove one or more maps or elements from the node. You can pass a single key as a string, for example `$this->remove('bar')` or an array of keys to remove multiple sub-nodes, for instance `$this->remove(['bar', 'baz'])`. Calling `remove()` on a node with array values will remove the specified values from the array by name.
+The `remove()` method will remove one or more maps or elements from the node. You can pass a single key as a string, for example `$node->remove('bar')` or an array of keys to remove multiple sub-nodes, for instance `$node->remove(['bar', 'baz'])`. Calling `remove()` on a node with array values will remove the specified values from the array by name.
 
 ### *$node->has()*
 
-Returns true if the node contains a sub-node with the name specified. For example `$this->has('foo')`.
+Returns true if the node contains a sub-node with the name specified. For example `$node->has('foo')`.
 
 ### *$node->containsArray()*
 
-Identical to `has()` but also checks if the sub-node is an array. Use as `$this->containsArray('foo')`.
+Identical to `has()` but also checks if the sub-node is an array. Use as `$node->containsArray('foo')`.
 
 ### *$node->containsType()*
 
-Identical to `has()` but also validates the type of scalar content. Usage is `$this->containsType('foo', 'string')`. Valid types includes `integer`, `string`, `float` and `boolean`.
+Identical to `has()` but also validates the type of scalar content. Usage is `$node->containsType('foo', 'string')`. Valid types includes `integer`, `string`, `float` and `boolean`.
 
 ### *$node->dump()*
 
